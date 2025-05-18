@@ -121,7 +121,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white/10 backdrop-blur-sm"
+                  className="bg-white text-green-800 hover:bg-white/90 shadow-lg"
                 >
                   <Link href="/posts">浏览帖子</Link>
                 </Button>
@@ -319,7 +319,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
               >
                 <div className="relative w-64 h-64">
                   <Image
-                    src="/placeholder.svg?height=256&width=256"
+                    src="/img/1.png"
                     alt="Minecraft 社区"
                     fill
                     className="object-cover rounded-lg shadow-xl"
