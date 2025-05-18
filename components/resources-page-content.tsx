@@ -96,8 +96,10 @@ export function ResourcesPageContent({ session, tags, posts }: ResourcesPageCont
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button asChild className="bg-white text-green-800 hover:bg-white/90 shadow-md">
                 <Link href="/posts/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  分享资源
+                  <div className="flex items-center">
+                    <Plus className="h-4 w-4 mr-2" />
+                    分享资源
+                  </div>
                 </Link>
               </Button>
             </motion.div>
