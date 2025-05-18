@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/components/ui/use-toast"
 import { SupabaseImageUpload } from "@/components/supabase-image-upload"
 import { useAuth } from "@/components/auth-provider"
+import { TagSelector } from "@/components/tag-selector" // 导入标签选择器
 
 export default function NewPost() {
   const router = useRouter()
@@ -24,6 +25,7 @@ export default function NewPost() {
     title: "",
     content: "",
     imageUrl: "",
+    tagId: null as string | null, // 添加标签ID字段
   })
 
   // 在组件加载时检查用户是否已登录
@@ -52,6 +54,13 @@ export default function NewPost() {
     })
   }
 
+  const handleTagSelect = (tagId: string | null) => {
+    setFormData({
+      ...formData,
+      tagId,
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -77,6 +86,7 @@ export default function NewPost() {
           content: formData.content,
           image_url: formData.imageUrl,
           user_id: user.id,
+          tag_id: formData.tagId, // 添加标签ID
         })
         .select()
 
@@ -134,6 +144,14 @@ export default function NewPost() {
                 onChange={handleChange}
               />
             </div>
+
+            {/* 添加标签选择器 */}
+            <div className="space-y-2">
+              <Label htmlFor="tag">标签</Label>
+              <TagSelector selectedTagId={formData.tagId} onTagSelect={handleTagSelect} />
+              <p className="text-xs text-muted-foreground">选择一个合适的标签，帮助其他用户更容易找到您的帖子</p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="content">内容</Label>
               <Textarea

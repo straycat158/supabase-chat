@@ -1,13 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PostCard } from "@/components/post-card"
 import { Plus, Search, Filter } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase/client"
+import { Badge } from "@/components/ui/badge"
+import type { Tag } from "@/lib/types/database"
 
 interface PostsPageContentProps {
   session: any
@@ -29,9 +33,101 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
-export function PostsPageContent({ session, posts }: PostsPageContentProps) {
+export function PostsPageContent({ session, posts: initialPosts }: PostsPageContentProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tagParam = searchParams.get("tag")
+
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("newest")
+  const [selectedTagSlug, setSelectedTagSlug] = useState<string | null>(tagParam)
+  const [tags, setTags] = useState<Tag[]>([])
+  const [posts, setPosts] = useState(initialPosts)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const supabase = createClient()
+
+  // 获取所有标签
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const { data, error } = await supabase.from("tags").select("*").order("name")
+
+        if (error) throw error
+        setTags(data || [])
+      } catch (error) {
+        console.error("获取标签失败:", error)
+      }
+    }
+
+    fetchTags()
+  }, [supabase])
+
+  // 根据标签筛选帖子
+  useEffect(() => {
+    const fetchFilteredPosts = async () => {
+      if (!selectedTagSlug && initialPosts) {
+        setPosts(initialPosts)
+        return
+      }
+
+      setIsLoading(true)
+      try {
+        // 先获取标签ID
+        let tagId = null
+        if (selectedTagSlug) {
+          const { data: tagData } = await supabase.from("tags").select("id").eq("slug", selectedTagSlug).single()
+
+          if (tagData) {
+            tagId = tagData.id
+          }
+        }
+
+        // 根据标签ID筛选帖子
+        const query = supabase
+          .from("posts")
+          .select(`
+            *,
+            profiles:user_id (id, username, avatar_url),
+            comments:comments (id),
+            tags:tag_id (*)
+          `)
+          .order("created_at", { ascending: false })
+
+        if (tagId) {
+          query.eq("tag_id", tagId)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        setPosts(data || [])
+      } catch (error) {
+        console.error("获取帖子失败:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFilteredPosts()
+  }, [selectedTagSlug, initialPosts, supabase])
+
+  // 处理标签点击
+  const handleTagClick = (slug: string) => {
+    if (selectedTagSlug === slug) {
+      setSelectedTagSlug(null)
+      router.push("/posts")
+    } else {
+      setSelectedTagSlug(slug)
+      router.push(`/posts?tag=${slug}`)
+    }
+  }
+
+  // 清除标签筛选
+  const clearTagFilter = () => {
+    setSelectedTagSlug(null)
+    router.push("/posts")
+  }
 
   // 过滤和排序帖子
   const filteredPosts = posts.filter(
@@ -73,6 +169,31 @@ export function PostsPageContent({ session, posts }: PostsPageContentProps) {
             </motion.div>
           )}
         </div>
+      </motion.div>
+
+      {/* 标签筛选区域 */}
+      <motion.div
+        className="flex flex-wrap gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        {tags.map((tag) => (
+          <Badge
+            key={tag.id}
+            variant={selectedTagSlug === tag.slug ? "default" : "outline"}
+            className="cursor-pointer"
+            onClick={() => handleTagClick(tag.slug)}
+          >
+            {tag.name}
+          </Badge>
+        ))}
+
+        {selectedTagSlug && (
+          <Button variant="ghost" size="sm" onClick={clearTagFilter} className="h-6 px-2">
+            清除筛选
+          </Button>
+        )}
       </motion.div>
 
       <motion.div
@@ -120,7 +241,11 @@ export function PostsPageContent({ session, posts }: PostsPageContentProps) {
         </div>
       </motion.div>
 
-      {sortedPosts.length > 0 ? (
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      ) : sortedPosts.length > 0 ? (
         <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           variants={container}
@@ -140,10 +265,10 @@ export function PostsPageContent({ session, posts }: PostsPageContentProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          {searchTerm ? (
+          {searchTerm || selectedTagSlug ? (
             <>
               <h3 className="text-lg font-medium">没有找到匹配的帖子</h3>
-              <p className="text-muted-foreground mt-1">尝试使用其他关键词搜索</p>
+              <p className="text-muted-foreground mt-1">尝试使用其他关键词或标签</p>
             </>
           ) : (
             <>

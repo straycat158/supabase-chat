@@ -35,6 +35,7 @@ export interface Database {
           created_at: string
           updated_at: string
           image_url?: string | null
+          tag_id?: string | null // 添加标签ID字段
         }
         Insert: {
           id?: string
@@ -44,6 +45,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           image_url?: string | null
+          tag_id?: string | null // 添加标签ID字段
         }
         Update: {
           id?: string
@@ -53,6 +55,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           image_url?: string | null
+          tag_id?: string | null // 添加标签ID字段
         }
       }
       comments: {
@@ -116,6 +119,36 @@ export interface Database {
           created_by?: string
         }
       }
+      tags: {
+        // 新增标签表
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          color: string | null
+          icon: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          color?: string | null
+          icon?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          color?: string | null
+          icon?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -124,3 +157,4 @@ export type Announcement = Database["public"]["Tables"]["announcements"]["Row"]
 export type Post = Database["public"]["Tables"]["posts"]["Row"]
 export type Comment = Database["public"]["Tables"]["comments"]["Row"]
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+export type Tag = Database["public"]["Tables"]["tags"]["Row"] // 添加Tag类型导出

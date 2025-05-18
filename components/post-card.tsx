@@ -13,6 +13,7 @@ import { DeletePostButton } from "@/components/delete-post-button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
+import { TagBadge } from "@/components/tag-badge" // 导入标签组件
 
 interface PostCardProps {
   post: any
@@ -34,9 +35,13 @@ export function PostCard({ post }: PostCardProps) {
       <Card className="h-full transition-shadow hover:shadow-md overflow-hidden flex flex-col border-none shadow-md">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <Link href={`/posts/${post.id}`} className="block">
-              <CardTitle className="text-xl hover:text-primary transition-colors">{post.title}</CardTitle>
-            </Link>
+            <div className="flex flex-col gap-2">
+              <Link href={`/posts/${post.id}`} className="block">
+                <CardTitle className="text-xl hover:text-primary transition-colors">{post.title}</CardTitle>
+              </Link>
+              {/* 显示标签 */}
+              {post.tags && <TagBadge tag={post.tags} asLink size="sm" />}
+            </div>
             {isAuthor && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

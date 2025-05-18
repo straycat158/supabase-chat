@@ -39,7 +39,10 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/auth-helpers-nextjs": "latest",
+<<<<<<< HEAD
     "@supabase/ssr": "latest",
+=======
+>>>>>>> 734f7392f4fe3611c8bfe1056f2521c46c0faa44
     "@supabase/supabase-js": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
@@ -53,9 +56,9 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "^0.4.4",
-    "react": "^19",
+    "react": "^18.2.0",
     "react-day-picker": "latest",
-    "react-dom": "^19",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
@@ -73,4 +76,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
+  "engines": {
+  "node": ">=20.0.0"
+}
 }

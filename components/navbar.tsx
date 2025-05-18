@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Hammer, LogOut, User, Plus, Home, MessageSquare, Menu, X } from "lucide-react"
+import { Hammer, LogOut, User, Plus, Home, MessageSquare, Menu, X, BookOpen } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -38,6 +38,7 @@ export function Navbar() {
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true
     if (path === "/posts" && pathname.startsWith("/posts")) return true
+    if (path === "/resources" && pathname.startsWith("/resources")) return true
     return pathname === path
   }
 
@@ -107,6 +108,25 @@ export function Navbar() {
               </div>
               <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
               {isActive("/posts") && (
+                <motion.div
+                  className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
+                  layoutId="navbar-indicator"
+                />
+              )}
+            </Link>
+            <Link
+              href="/resources"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary relative group",
+                isActive("/resources") ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                <span>资源</span>
+              </div>
+              <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
+              {isActive("/resources") && (
                 <motion.div
                   className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
                   layoutId="navbar-indicator"
@@ -224,6 +244,17 @@ export function Navbar() {
             >
               <MessageSquare className="h-5 w-5" />
               <span>帖子</span>
+            </Link>
+            <Link
+              href="/resources"
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md",
+                isActive("/resources") ? "bg-primary/10 text-primary" : "text-foreground",
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <BookOpen className="h-5 w-5" />
+              <span>资源</span>
             </Link>
 
             {user ? (

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { VideoLinkDetector } from "@/components/video-link-detector"
+import { TagBadge } from "@/components/tag-badge" // 导入标签组件
 
 export const revalidate = 0
 
@@ -31,7 +32,8 @@ export default async function PostPage({ params }: PostPageProps) {
     .from("posts")
     .select(`
       *,
-      profiles:user_id (id, username, avatar_url)
+      profiles:user_id (id, username, avatar_url),
+      tags:tag_id (*)
     `)
     .eq("id", params.id)
     .single()
@@ -63,17 +65,21 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <Card className="border-none shadow-md overflow-hidden">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">{post.title}</CardTitle>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
-              <AvatarFallback>{(post.profiles?.username || "U").charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground">{post.profiles?.username}</span>
-            <span className="text-sm text-muted-foreground">•</span>
-            <span className="text-sm text-muted-foreground">{formattedDate}</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">{post.title}</CardTitle>
+            </div>
+            {/* 显示标签 */}
+            {post.tags && <TagBadge tag={post.tags} size="md" />}
+            <div className="flex items-center gap-2 mt-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
+                <AvatarFallback>{(post.profiles?.username || "U").charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground">{post.profiles?.username}</span>
+              <span className="text-sm text-muted-foreground">•</span>
+              <span className="text-sm text-muted-foreground">{formattedDate}</span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

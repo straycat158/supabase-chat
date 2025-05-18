@@ -7,6 +7,8 @@
 - 用户认证（注册、登录、个人资料管理）
 - 帖子发布和管理
 - 评论系统
+- 标签系统（分类帖子）
+- 资源中心（按标签分类展示内容）
 - 图片上传
 - 实时更新
 - 响应式设计
@@ -44,6 +46,10 @@ npm run dev
    - 访问`/admin/storage`页面
    - 点击"初始化存储桶"按钮
 
+6. 初始化标签系统
+   - 在Supabase SQL编辑器中运行`scripts/create-tags.sql`脚本
+   - 或者访问`/admin/tags`页面手动创建标签
+
 ## 数据库设置
 
 Supabase数据库需要以下表：
@@ -52,8 +58,18 @@ Supabase数据库需要以下表：
 2. `posts` - 帖子
 3. `comments` - 评论
 4. `announcements` - 公告
+5. `tags` - 标签
 
 详细的数据库结构可以在`lib/types/database.ts`文件中找到。
+
+## 标签系统
+
+论坛实现了完整的标签系统，允许用户：
+
+1. 在发帖时选择标签（如服务器、模组、资源包等）
+2. 在帖子列表页按标签筛选帖子
+3. 在资源中心页面按标签分类浏览内容
+4. 管理员可以在`/admin/tags`页面管理标签
 
 ## 环境变量
 
@@ -82,6 +98,3 @@ npm start
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Framer Motion](https://www.framer.com/motion/)
 - [Lucide Icons](https://lucide.dev/)
-\`\`\`
-
-最后，让我添加一个简单的脚本来帮助用户设置Supabase环境：
