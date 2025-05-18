@@ -7,11 +7,9 @@ import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageSquare, MoreVertical } from "lucide-react"
+import { MessageSquare } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DeletePostButton } from "@/components/delete-post-button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
 import { TagBadge } from "@/components/tag-badge"
 
@@ -43,27 +41,9 @@ export function PostCard({ post }: PostCardProps) {
               {post.tags && <TagBadge tag={post.tags} asLink size="sm" />}
             </div>
             {isAuthor && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">操作菜单</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <div className="w-full cursor-pointer">
-                      <DeletePostButton
-                        postId={post.id}
-                        variant="ghost"
-                        showIcon
-                        showText
-                        className="w-full justify-start"
-                      />
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div>
+                <DeletePostButton postId={post.id} variant="ghost" size="icon" className="h-8 w-8" showIcon />
+              </div>
             )}
           </div>
         </CardHeader>
