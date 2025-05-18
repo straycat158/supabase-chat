@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { VideoLinkDetector } from "@/components/video-link-detector"
-import { TagBadge } from "@/components/tag-badge" // 导入标签组件
+import { TagBadge } from "@/components/tag-badge"
 
 export const revalidate = 0
 

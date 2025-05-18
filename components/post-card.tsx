@@ -13,7 +13,7 @@ import { DeletePostButton } from "@/components/delete-post-button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
-import { TagBadge } from "@/components/tag-badge" // 导入标签组件
+import { TagBadge } from "@/components/tag-badge"
 
 interface PostCardProps {
   post: any
@@ -51,14 +51,16 @@ export function PostCard({ post }: PostCardProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild className="text-destructive">
-                    <DeletePostButton
-                      postId={post.id}
-                      variant="ghost"
-                      showIcon
-                      showText
-                      className="w-full justify-start cursor-pointer"
-                    />
+                  <DropdownMenuItem asChild>
+                    <div className="w-full cursor-pointer">
+                      <DeletePostButton
+                        postId={post.id}
+                        variant="ghost"
+                        showIcon
+                        showText
+                        className="w-full justify-start"
+                      />
+                    </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

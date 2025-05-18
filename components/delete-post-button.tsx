@@ -41,6 +41,7 @@ export function DeletePostButton({
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
+      // 修改：使用fetch API直接发送请求，确保包含正确的Content-Type头
       const response = await fetch("/api/posts/delete", {
         method: "DELETE",
         headers: {
@@ -49,11 +50,13 @@ export function DeletePostButton({
         body: JSON.stringify({ postId }),
       })
 
-      const data = await response.json()
-
+      // 检查响应状态
       if (!response.ok) {
-        throw new Error(data.error || "删除帖子失败")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "删除帖子失败")
       }
+
+      const data = await response.json()
 
       toast({
         title: "删除成功",
@@ -64,9 +67,10 @@ export function DeletePostButton({
       router.push("/posts")
       router.refresh()
     } catch (error: any) {
+      console.error("删除帖子时出错:", error)
       toast({
         title: "删除失败",
-        description: error.message,
+        description: error.message || "删除帖子时出现错误",
         variant: "destructive",
       })
     } finally {
@@ -77,7 +81,14 @@ export function DeletePostButton({
 
   return (
     <>
-      <Button variant={variant} size={size} className={className} onClick={() => setIsOpen(true)} aria-label="删除帖子">
+      <Button
+        variant={variant}
+        size={size}
+        className={className}
+        onClick={() => setIsOpen(true)}
+        aria-label="删除帖子"
+        type="button"
+      >
         {showIcon && <Trash2 className="h-4 w-4" />}
         {showText && <span className={showIcon ? "ml-2" : ""}>删除</span>}
       </Button>

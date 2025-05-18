@@ -121,7 +121,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
                   asChild
                   size="lg"
                   variant="outline"
-                  className="bg-white text-green-800 hover:bg-white/90 shadow-lg"
+                  className="border-white text-white hover:bg-white/10 backdrop-blur-sm"
                 >
                   <Link href="/posts">浏览帖子</Link>
                 </Button>
@@ -317,7 +317,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="relative w-1920 h-1080">
+                <div className="relative w-64 h-64">
                   <Image
                     src="/img/1.png"
                     alt="Minecraft 社区"
