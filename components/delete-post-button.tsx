@@ -38,6 +38,7 @@ export function DeletePostButton({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ postId }),
+        credentials: "include", // 添加这行，确保带上 cookie
       })
 
       if (!response.ok) {
@@ -60,7 +61,6 @@ export function DeletePostButton({
         description: error.message || "删除帖子时出现错误",
         variant: "destructive",
       })
-      // 重置确认状态
       setConfirmDelete(false)
     } finally {
       setIsDeleting(false)
