@@ -94,13 +94,12 @@ export function ResourcesPageContent({ session, tags, posts }: ResourcesPageCont
           <p className="text-white/90 mb-6">探索社区分享的各类Minecraft资源，包括服务器、模组、资源包、建筑设计等。</p>
           {session && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button asChild className="bg-white text-green-800 hover:bg-white/90 shadow-md">
-                <Link href="/posts/new">
-                  <div className="flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    分享资源
-                  </div>
-                </Link>
+              <Button
+                className="bg-white text-green-800 hover:bg-white/90 shadow-md"
+                onClick={() => router.push("/posts/new")}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                分享资源
               </Button>
             </motion.div>
           )}
@@ -270,11 +269,9 @@ export function ResourcesPageContent({ session, tags, posts }: ResourcesPageCont
                   <CardContent className="py-10 text-center">
                     <p className="text-muted-foreground">暂无相关资源</p>
                     {session && (
-                      <Button asChild className="mt-4">
-                        <Link href="/posts/new">
-                          <Plus className="h-4 w-4 mr-2" />
-                          分享资源
-                        </Link>
+                      <Button className="mt-4" onClick={() => router.push("/posts/new")}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        分享资源
                       </Button>
                     )}
                   </CardContent>

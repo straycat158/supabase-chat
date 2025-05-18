@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -160,13 +159,12 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
           <p className="text-white/90 mb-6">浏览社区中的精彩帖子，分享您的想法和经验，与其他玩家交流互动。</p>
           {session && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button asChild className="bg-white text-green-800 hover:bg-white/90 shadow-md">
-                <Link href="/posts/new">
-                  <div className="flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    发布帖子
-                  </div>
-                </Link>
+              <Button
+                className="bg-white text-green-800 hover:bg-white/90 shadow-md"
+                onClick={() => router.push("/posts/new")}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                发布帖子
               </Button>
             </motion.div>
           )}
@@ -232,13 +230,9 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
 
           {session && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-auto md:ml-0">
-              <Button asChild className="shadow-sm">
-                <Link href="/posts/new">
-                  <div className="flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    发布帖子
-                  </div>
-                </Link>
+              <Button className="shadow-sm" onClick={() => router.push("/posts/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                发布帖子
               </Button>
             </motion.div>
           )}
@@ -282,13 +276,9 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
           )}
           {session && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="inline-block mt-4">
-              <Button asChild className="shadow-sm">
-                <Link href="/posts/new">
-                  <div className="flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    发布帖子
-                  </div>
-                </Link>
+              <Button className="shadow-sm" onClick={() => router.push("/posts/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                发布帖子
               </Button>
             </motion.div>
           )}
