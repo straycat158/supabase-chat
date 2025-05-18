@@ -3,7 +3,6 @@ import { createServerClient } from "@supabase/ssr"
 
 export async function DELETE(req: NextRequest) {
   try {
-    const res = NextResponse.next()
 
     // 创建 Supabase 客户端（使用 SSR）
     const supabase = createServerClient(
