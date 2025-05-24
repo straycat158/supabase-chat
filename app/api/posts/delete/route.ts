@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 
 export async function DELETE(req: NextRequest) {
@@ -18,7 +18,7 @@ export async function DELETE(req: NextRequest) {
             // 忽略移除 cookie（只读，不写）
           },
         },
-      }
+      },
     )
 
     const body = await req.json()
@@ -38,11 +38,7 @@ export async function DELETE(req: NextRequest) {
 
     const userId = session.user.id
 
-    const { data: post, error: fetchError } = await supabase
-      .from("posts")
-      .select("user_id")
-      .eq("id", postId)
-      .single()
+    const { data: post, error: fetchError } = await supabase.from("posts").select("user_id").eq("id", postId).single()
 
     if (fetchError) {
       console.error("获取帖子信息失败:", fetchError)
@@ -57,20 +53,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "无权删除此帖子" }, { status: 403 })
     }
 
-    const { error: commentsError } = await supabase
-      .from("comments")
-      .delete()
-      .eq("post_id", postId)
+    const { error: commentsError } = await supabase.from("comments").delete().eq("post_id", postId)
 
     if (commentsError) {
       console.error("删除评论失败:", commentsError)
       return NextResponse.json({ error: "删除评论失败" }, { status: 500 })
     }
 
-    const { error: deleteError } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId)
+    const { error: deleteError } = await supabase.from("posts").delete().eq("id", postId)
 
     if (deleteError) {
       console.error("删除帖子失败:", deleteError)

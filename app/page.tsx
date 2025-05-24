@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { HomePageContent } from "@/components/home-page-content"
+import { Dashboard } from "@/components/dashboard"
+import { LandingPage } from "@/components/landing-page"
 
 export const revalidate = 0
 
@@ -34,16 +35,41 @@ export default async function Home() {
   // 获取评论数量
   const { count: commentCount } = await supabase.from("comments").select("*", { count: "exact", head: true })
 
-  // 传递数据到客户端组件
-  return (
-    <HomePageContent
-      session={session}
-      latestPosts={latestPosts || []}
-      stats={{
-        users: userCount || 0,
-        posts: postCount || 0,
-        comments: commentCount || 0,
-      }}
-    />
-  )
+  const stats = {
+    users: userCount || 0,
+    posts: postCount || 0,
+    comments: commentCount || 0,
+  }
+
+  // 如果用户已登录，显示仪表盘
+  if (session) {
+    // 获取用户的帖子
+    const { data: userPosts } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        profiles:user_id (username, avatar_url),
+        comments:comments (id)
+      `)
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+
+    // 获取社区最新帖子（排除用户自己的）
+    const { data: recentPosts } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        profiles:user_id (username, avatar_url),
+        comments:comments (id)
+      `)
+      .neq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+
+    return <Dashboard userPosts={userPosts || []} recentPosts={recentPosts || []} stats={stats} />
+  }
+
+  // 如果用户未登录，显示着陆页
+  return <LandingPage latestPosts={latestPosts || []} stats={stats} />
 }

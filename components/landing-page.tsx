@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PostCard } from "@/components/post-card"
 import { Users, MessageSquare, MessagesSquare, Hammer, Sword, Gem, Shield, Blocks } from "lucide-react"
-import { AuthDebugger } from "@/components/auth-debugger"
 import { AnnouncementsDisplay } from "@/components/announcements-display"
 
-interface HomePageContentProps {
-  session: any
+interface LandingPageProps {
   latestPosts: any[]
   stats: {
     users: number
@@ -69,7 +67,7 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
-export function HomePageContent({ session, latestPosts, stats }: HomePageContentProps) {
+export function LandingPage({ latestPosts, stats }: LandingPageProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -80,9 +78,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
 
   return (
     <div className="space-y-16 pb-16">
-      <AuthDebugger />
-
-      {/* 公告显示 - 放在最顶部，更加醒目 */}
+      {/* 公告显示 */}
       <section className="container mx-auto mt-6">
         <AnnouncementsDisplay />
       </section>
@@ -103,19 +99,11 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
               在这里分享您的 Minecraft 建筑、红石设计、生存技巧和游戏体验。加入我们的社区，与其他玩家交流互动！
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              {session ? (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button asChild size="lg" className="bg-white text-green-800 hover:bg-white/90 shadow-lg">
-                    <Link href="/posts/new">发布帖子</Link>
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button asChild size="lg" className="bg-white text-green-800 hover:bg-white/90 shadow-lg">
-                    <Link href="/signup">立即加入</Link>
-                  </Button>
-                </motion.div>
-              )}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button asChild size="lg" className="bg-white text-green-800 hover:bg-white/90 shadow-lg">
+                  <Link href="/signup">立即加入</Link>
+                </Button>
+              </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   asChild
@@ -276,11 +264,9 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
           <Card className="border-none shadow-md">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">还没有帖子，成为第一个发帖的用户吧！</p>
-              {session && (
-                <Button asChild className="mt-4 shadow-sm">
-                  <Link href="/posts/new">发布帖子</Link>
-                </Button>
-              )}
+              <Button asChild className="mt-4 shadow-sm">
+                <Link href="/signup">立即注册</Link>
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -302,13 +288,11 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
                   无论您是 Minecraft
                   新手还是资深玩家，我们的社区都欢迎您的加入。分享您的创意，结交新朋友，一起探索无限可能的方块世界！
                 </p>
-                {!session && (
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button asChild size="lg" className="shadow-lg">
-                      <Link href="/signup">立即注册</Link>
-                    </Button>
-                  </motion.div>
-                )}
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button asChild size="lg" className="shadow-lg">
+                    <Link href="/signup">立即注册</Link>
+                  </Button>
+                </motion.div>
               </motion.div>
               <motion.div
                 className="flex justify-center"
