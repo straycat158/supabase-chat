@@ -38,6 +38,38 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
+// 安全的时间格式化函数
+function safeFormatTime(dateString: string | null | undefined): string {
+  if (!dateString) return "未知时间"
+
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return "未知时间"
+    }
+    return formatDistanceToNow(date, { addSuffix: true, locale: zhCN })
+  } catch (error) {
+    console.error("时间格式化错误:", error)
+    return "未知时间"
+  }
+}
+
+// 安全的加入时间格式化函数
+function safeFormatJoinTime(dateString: string | null | undefined): string {
+  if (!dateString) return "未知"
+
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return "未知"
+    }
+    return formatDistanceToNow(date, { locale: zhCN })
+  } catch (error) {
+    console.error("加入时间格式化错误:", error)
+    return "未知"
+  }
+}
+
 export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
   const { user } = useAuth()
   const supabase = createClient()
@@ -46,12 +78,15 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
     totalComments: 0,
     joinedDate: "",
   })
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
 
     const fetchUserStats = async () => {
       try {
+        setIsLoading(true)
+
         // 获取用户帖子数量
         const { count: postsCount } = await supabase
           .from("posts")
@@ -70,10 +105,12 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
         setUserStats({
           totalPosts: postsCount || 0,
           totalComments: commentsCount || 0,
-          joinedDate: profile?.created_at || user.created_at,
+          joinedDate: profile?.created_at || user.created_at || "",
         })
       } catch (error) {
         console.error("获取用户统计失败:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -111,6 +148,21 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
     },
   ]
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="p-8 text-center">
+          <CardContent>
+            <p className="text-muted-foreground">请先登录以查看仪表盘</p>
+            <Button asChild className="mt-4">
+              <Link href="/login">立即登录</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {/* 公告显示 */}
@@ -125,14 +177,16 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">欢迎回来，{user?.user_metadata?.username || "玩家"}！</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              欢迎回来，{user?.user_metadata?.username || user?.email?.split("@")[0] || "玩家"}！
+            </h1>
             <p className="text-white/90">今天是探索Minecraft世界的好日子，看看社区里有什么新鲜事吧！</p>
           </div>
           <div className="hidden md:block">
             <Avatar className="h-20 w-20 border-4 border-white/20">
               <AvatarImage src={user?.user_metadata?.avatar_url || ""} alt={user?.user_metadata?.username || "用户"} />
               <AvatarFallback className="text-2xl bg-white/20 text-white">
-                {(user?.user_metadata?.username || "U").charAt(0).toUpperCase()}
+                {(user?.user_metadata?.username || user?.email?.charAt(0) || "U").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </div>
@@ -153,7 +207,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.totalPosts}</div>
+              <div className="text-2xl font-bold">{isLoading ? "..." : userStats.totalPosts}</div>
               <p className="text-xs text-muted-foreground">+{userPosts.length} 最近发布</p>
             </CardContent>
           </Card>
@@ -166,7 +220,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.totalComments}</div>
+              <div className="text-2xl font-bold">{isLoading ? "..." : userStats.totalComments}</div>
               <p className="text-xs text-muted-foreground">参与讨论</p>
             </CardContent>
           </Card>
@@ -192,9 +246,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {formatDistanceToNow(new Date(userStats.joinedDate), { locale: zhCN })}
-              </div>
+              <div className="text-lg font-bold">{isLoading ? "..." : safeFormatJoinTime(userStats.joinedDate)}</div>
               <p className="text-xs text-muted-foreground">前加入</p>
             </CardContent>
           </Card>
@@ -241,11 +293,11 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">我的最新帖子</h2>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/posts?author=me">查看全部</Link>
+              <Link href="/posts">查看全部</Link>
             </Button>
           </div>
 
-          {userPosts.length > 0 ? (
+          {userPosts && userPosts.length > 0 ? (
             <div className="space-y-4">
               {userPosts.slice(0, 3).map((post) => (
                 <Card key={post.id} className="border-none shadow-md">
@@ -258,12 +310,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.content}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(post.created_at), {
-                              addSuffix: true,
-                              locale: zhCN,
-                            })}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{safeFormatTime(post.created_at)}</span>
                           <MessageSquare className="h-3 w-3 text-muted-foreground ml-2" />
                           <span className="text-xs text-muted-foreground">{post.comments?.length || 0}</span>
                         </div>
@@ -315,7 +362,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
             </Button>
           </div>
 
-          {recentPosts.length > 0 ? (
+          {recentPosts && recentPosts.length > 0 ? (
             <div className="space-y-4">
               {recentPosts.slice(0, 3).map((post) => (
                 <Card key={post.id} className="border-none shadow-md">
@@ -328,12 +375,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{post.profiles?.username}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(post.created_at), {
-                              addSuffix: true,
-                              locale: zhCN,
-                            })}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{safeFormatTime(post.created_at)}</span>
                         </div>
                         <Link href={`/posts/${post.id}`}>
                           <h3 className="font-semibold mt-1 hover:text-primary transition-colors">{post.title}</h3>

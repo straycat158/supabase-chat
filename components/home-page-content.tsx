@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PostCard } from "@/components/post-card"
 import { Users, MessageSquare, MessagesSquare, Hammer, Sword, Gem, Shield, Blocks } from "lucide-react"
-import { AuthDebugger } from "@/components/auth-debugger"
 import { AnnouncementsDisplay } from "@/components/announcements-display"
 
 interface HomePageContentProps {
@@ -80,9 +79,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
 
   return (
     <div className="space-y-16 pb-16">
-      <AuthDebugger />
-
-      {/* 公告显示 - 放在最顶部，更加醒目 */}
+      {/* 公告显示 */}
       <section className="container mx-auto mt-6">
         <AnnouncementsDisplay />
       </section>
@@ -258,7 +255,7 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
           </motion.div>
         </div>
 
-        {latestPosts.length > 0 ? (
+        {latestPosts && latestPosts.length > 0 ? (
           <motion.div
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             variants={container}
