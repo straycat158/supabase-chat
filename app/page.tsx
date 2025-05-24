@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Dashboard } from "@/components/dashboard"
 import { LandingPage } from "@/components/landing-page"
 
 export const revalidate = 0
@@ -8,11 +7,7 @@ export default async function Home() {
   const supabase = createClient()
 
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    // 获取最新的5篇帖子用于首页展示
+    // 获取最新的帖子用于首页展示
     const { data: latestPosts, error: postsError } = await supabase
       .from("posts")
       .select(`
@@ -21,7 +16,7 @@ export default async function Home() {
         comments:comments (id)
       `)
       .order("created_at", { ascending: false })
-      .limit(5)
+      .limit(8)
 
     if (postsError) {
       console.error("Error fetching posts:", postsError)
@@ -40,50 +35,7 @@ export default async function Home() {
       comments: commentCount || 0,
     }
 
-    // 如果用户已登录，显示仪表盘
-    if (session) {
-      try {
-        // 获取用户的帖子
-        const { data: userPosts, error: userPostsError } = await supabase
-          .from("posts")
-          .select(`
-            *,
-            profiles:user_id (username, avatar_url),
-            comments:comments (id)
-          `)
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false })
-          .limit(10)
-
-        if (userPostsError) {
-          console.error("Error fetching user posts:", userPostsError)
-        }
-
-        // 获取社区最新帖子（排除用户自己的）
-        const { data: recentPosts, error: recentPostsError } = await supabase
-          .from("posts")
-          .select(`
-            *,
-            profiles:user_id (username, avatar_url),
-            comments:comments (id)
-          `)
-          .neq("user_id", session.user.id)
-          .order("created_at", { ascending: false })
-          .limit(5)
-
-        if (recentPostsError) {
-          console.error("Error fetching recent posts:", recentPostsError)
-        }
-
-        return <Dashboard userPosts={userPosts || []} recentPosts={recentPosts || []} stats={stats} />
-      } catch (error) {
-        console.error("Error in dashboard data fetching:", error)
-        // 如果仪表盘数据获取失败，回退到基本仪表盘
-        return <Dashboard userPosts={[]} recentPosts={latestPosts || []} stats={stats} />
-      }
-    }
-
-    // 如果用户未登录，显示着陆页
+    // 所有用户都显示着陆页，让用户自己选择去仪表盘
     return <LandingPage latestPosts={latestPosts || []} stats={stats} />
   } catch (error) {
     console.error("Error in home page:", error)

@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { createClient } from "@/lib/supabase/client"
-import { MessageSquare, Users, Plus, TrendingUp, Clock, Calendar, Activity, Star, Edit3 } from "lucide-react"
+import { MessageSquare, Users, Plus, TrendingUp, Clock, Calendar, Activity, Star, Edit3, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { formatDistanceToNow } from "date-fns"
 import { zhCN } from "date-fns/locale"
-import { AnnouncementsDisplay } from "@/components/announcements-display"
+import { useRouter } from "next/navigation"
 
 interface DashboardProps {
   userPosts: any[]
@@ -77,6 +77,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
     joinedDate: "",
   })
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     async function getUser() {
@@ -181,34 +182,63 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* 公告显示 */}
-      <AnnouncementsDisplay />
+      {/* 返回按钮 */}
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          返回
+        </Button>
+      </motion.div>
 
-      {/* 欢迎区域 */}
+      {/* 用户信息卡片 */}
       <motion.div
         className="hero-gradient rounded-xl p-8 text-white"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">欢迎回来，{displayName}！</h1>
-            <p className="text-white/90">今天是探索Minecraft世界的好日子，看看社区里有什么新鲜事吧！</p>
-          </div>
-          <div className="hidden md:block">
-            <Avatar className="h-20 w-20 border-4 border-white/20">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          {/* 用户头像 - 更大更突出 */}
+          <div className="flex-shrink-0">
+            <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-white/20 shadow-lg">
               <AvatarImage
                 src={avatarUrl || "/placeholder.svg"}
                 alt={displayName}
+                className="object-cover"
                 onError={(e) => {
                   console.log("Avatar load error:", e)
                 }}
               />
-              <AvatarFallback className="text-2xl bg-white/20 text-white">
+              <AvatarFallback className="text-2xl md:text-4xl bg-white/20 text-white font-bold">
                 {displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
+          </div>
+
+          {/* 用户信息 */}
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">欢迎回来，{displayName}！</h1>
+            <p className="text-white/90 text-lg mb-4">今天是探索Minecraft世界的好日子，看看您的最新动态吧！</p>
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm">
+              <div className="bg-white/10 rounded-lg px-3 py-1">
+                <span className="text-white/70">加入时间：</span>
+                <span className="font-medium">{safeFormatJoinTime(userStats.joinedDate)}前</span>
+              </div>
+              <div className="bg-white/10 rounded-lg px-3 py-1">
+                <span className="text-white/70">邮箱：</span>
+                <span className="font-medium">{user.email}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="flex gap-2">
+            <Button variant="secondary" asChild>
+              <Link href="/profile">
+                <Edit3 className="h-4 w-4 mr-2" />
+                编辑资料
+              </Link>
+            </Button>
           </div>
         </div>
       </motion.div>
