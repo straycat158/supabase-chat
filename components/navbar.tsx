@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Hammer, LogOut, User, Plus, Home, MessageSquare, Menu, X, BookOpen } from "lucide-react"
+import { Hammer, LogOut, User, Plus, Home, MessageSquare, Menu, X, BookOpen, LayoutDashboard } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -40,6 +40,7 @@ export function Navbar() {
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true
+    if (path === "/dashboard" && pathname === "/dashboard") return true
     if (path === "/posts" && pathname.startsWith("/posts")) return true
     if (path === "/resources" && pathname.startsWith("/resources")) return true
     return pathname === path
@@ -98,6 +99,30 @@ export function Navbar() {
                 />
               )}
             </Link>
+
+            {/* 仪表盘按钮 - 仅登录用户可见 */}
+            {user && (
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary relative group",
+                  isActive("/dashboard") ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <div className="flex items-center gap-1">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>仪表盘</span>
+                </div>
+                <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
+                {isActive("/dashboard") && (
+                  <motion.div
+                    className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
+                    layoutId="navbar-indicator"
+                  />
+                )}
+              </Link>
+            )}
+
             <Link
               href="/posts"
               className={cn(
@@ -170,7 +195,7 @@ export function Navbar() {
                             alt={user.user_metadata?.username || "用户"}
                           />
                           <AvatarFallback className="bg-primary/10 text-primary">
-                            {(user.user_metadata?.username || "U").charAt(0).toUpperCase()}
+                            {(user.user_metadata?.username || user.email?.charAt(0) || "U").charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                       </Button>
@@ -183,6 +208,12 @@ export function Navbar() {
                         </div>
                       </div>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard" className="cursor-pointer">
+                          <LayoutDashboard className="h-4 w-4 mr-2" />
+                          仪表盘
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="cursor-pointer">
                           <User className="h-4 w-4 mr-2" />
@@ -243,6 +274,22 @@ export function Navbar() {
               <Home className="h-5 w-5" />
               <span>首页</span>
             </Link>
+
+            {/* 移动端仪表盘按钮 */}
+            {user && (
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "flex items-center gap-2 p-2 rounded-md",
+                  isActive("/dashboard") ? "bg-primary/10 text-primary" : "text-foreground",
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                <span>仪表盘</span>
+              </Link>
+            )}
+
             <Link
               href="/posts"
               className={cn(
