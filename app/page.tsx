@@ -1,5 +1,3 @@
-"use client"
-
 import { createClient } from "@/lib/supabase/server"
 import { Dashboard } from "@/components/dashboard"
 import { LandingPage } from "@/components/landing-page"
@@ -96,12 +94,9 @@ export default async function Home() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">页面加载出错</h1>
           <p className="text-muted-foreground mb-4">抱歉，页面加载时出现了问题。</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-          >
+          <a href="/" className="inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">
             重新加载
-          </button>
+          </a>
         </div>
       </div>
     )
