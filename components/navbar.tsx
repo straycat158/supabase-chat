@@ -17,6 +17,8 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { AnnouncementsDrawer } from "@/components/announcements-drawer"
+import { useAnnouncements } from "@/hooks/use-announcements"
 
 export function Navbar() {
   const router = useRouter()
@@ -25,6 +27,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const { hasNewAnnouncements, markAsRead } = useAnnouncements()
 
   const handleSignOut = async () => {
     await signOut()
@@ -145,71 +148,77 @@ export function Navbar() {
 
         {/* 桌面用户菜单 */}
         <div className="hidden md:flex items-center gap-4">
-          {!isLoading &&
-            (user ? (
-              <div className="flex items-center gap-4">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="sm" onClick={handleCreatePost} className="shadow-sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    发布帖子
-                  </Button>
-                </motion.div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                        <AvatarImage
-                          src={user.user_metadata?.avatar_url || ""}
-                          alt={user.user_metadata?.username || "用户"}
-                        />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {(user.user_metadata?.username || "U").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+          {!isLoading && (
+            <div className="flex items-center gap-4">
+              {/* 公告按钮 */}
+              <AnnouncementsDrawer hasNewAnnouncements={hasNewAnnouncements} onMarkAsRead={markAsRead} />
+
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="outline" size="sm" onClick={handleCreatePost} className="shadow-sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      发布帖子
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{user.user_metadata?.username || "用户"}</p>
-                        <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                  </motion.div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                          <AvatarImage
+                            src={user.user_metadata?.avatar_url || ""}
+                            alt={user.user_metadata?.username || "用户"}
+                          />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {(user.user_metadata?.username || "U").charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="flex items-center justify-start gap-2 p-2">
+                        <div className="flex flex-col space-y-1 leading-none">
+                          <p className="font-medium">{user.user_metadata?.username || "用户"}</p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                        </div>
                       </div>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer">
-                        <User className="h-4 w-4 mr-2" />
-                        个人资料
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile/images" className="cursor-pointer">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        我的图片
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      退出登录
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/login">登录</Link>
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button asChild size="sm" className="shadow-sm">
-                    <Link href="/signup">注册</Link>
-                  </Button>
-                </motion.div>
-              </div>
-            ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="cursor-pointer">
+                          <User className="h-4 w-4 mr-2" />
+                          个人资料
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/images" className="cursor-pointer">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          我的图片
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        退出登录
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/login">登录</Link>
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button asChild size="sm" className="shadow-sm">
+                      <Link href="/signup">注册</Link>
+                    </Button>
+                  </motion.div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -256,6 +265,12 @@ export function Navbar() {
               <BookOpen className="h-5 w-5" />
               <span>资源</span>
             </Link>
+
+            {/* 添加公告按钮 */}
+            <div className="flex items-center justify-between p-2">
+              <span className="text-sm font-medium">公告通知</span>
+              <AnnouncementsDrawer hasNewAnnouncements={hasNewAnnouncements} onMarkAsRead={markAsRead} />
+            </div>
 
             {user ? (
               <>
