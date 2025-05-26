@@ -29,58 +29,124 @@ export function PostCard({ post }: PostCardProps) {
   const isAuthor = user?.id === post.user_id
 
   return (
-    <motion.div whileHover={{ y: -5, transition: { duration: 0.2 } }} className="h-full">
-      <Card className="h-full transition-shadow hover:shadow-md overflow-hidden flex flex-col border-none shadow-md">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col gap-2">
-              <Link href={`/posts/${post.id}`} className="block">
-                <CardTitle className="text-xl hover:text-primary transition-colors">{post.title}</CardTitle>
-              </Link>
-              {/* 显示标签 */}
-              {post.tags && <TagBadge tag={post.tags} asLink size="sm" />}
+    <motion.div
+      className="h-full"
+      whileHover={{
+        y: -4,
+        transition: { type: "spring", stiffness: 300, damping: 20 },
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="group h-full overflow-hidden border-0 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/10 dark:bg-gray-900/80 dark:hover:shadow-green-400/5">
+        {/* 渐变边框效果 */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="h-full w-full rounded-lg bg-white dark:bg-gray-900" />
+        </div>
+
+        <div className="relative z-10 flex h-full flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-3 flex-1">
+                <Link href={`/posts/${post.id}`} className="block">
+                  <CardTitle className="text-lg leading-tight transition-colors duration-200 hover:text-green-600 dark:hover:text-green-400 line-clamp-2">
+                    {post.title}
+                  </CardTitle>
+                </Link>
+                {/* 显示标签 */}
+                {post.tags && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <TagBadge tag={post.tags} asLink size="sm" />
+                  </motion.div>
+                )}
+              </div>
+              {isAuthor && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <DeletePostButton
+                    postId={post.id}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    showIcon
+                  />
+                </motion.div>
+              )}
             </div>
-            {isAuthor && (
-              <div>
-                <DeletePostButton postId={post.id} variant="ghost" size="icon" className="h-8 w-8" showIcon />
+          </CardHeader>
+
+          {/* 图片区域 - 添加尺寸控制 */}
+          {post.image_url && (
+            <div className="px-6 pb-3">
+              <Link href={`/posts/${post.id}`} className="block">
+                <motion.div
+                  className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Image
+                    src={post.image_url || "/placeholder.svg"}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  {/* 渐变遮罩 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                </motion.div>
+              </Link>
+            </div>
+          )}
+
+          <CardContent className="flex-grow pb-3">
+            <div className="line-clamp-3 text-sm text-muted-foreground leading-relaxed">
+              <VideoLinkDetector content={post.content} />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex items-center justify-between pt-3 border-t border-green-100 dark:border-green-800/30">
+            <div className="flex items-center gap-3">
+              <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+                <Avatar className="h-7 w-7 ring-2 ring-green-200 dark:ring-green-800">
+                  <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
+                  <AvatarFallback className="text-xs bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
+                    {(post.profiles?.username || "U").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </motion.div>
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                  {post.profiles?.username}
+                </span>
+                <span className="text-xs text-muted-foreground">{formattedDate}</span>
               </div>
-            )}
-          </div>
-        </CardHeader>
-        {post.image_url && (
-          <div className="px-6 pb-2">
-            <Link href={`/posts/${post.id}`} className="block">
-              <div className="relative aspect-video w-full overflow-hidden rounded-md">
-                <Image
-                  src={post.image_url || "/placeholder.svg"}
-                  alt={post.title}
-                  fill
-                  className="object-cover image-hover"
-                />
-              </div>
-            </Link>
-          </div>
-        )}
-        <CardContent className="pb-2 flex-grow">
-          <div className="line-clamp-2 text-muted-foreground">
-            <VideoLinkDetector content={post.content} />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between pt-2">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
-              <AvatarFallback>{(post.profiles?.username || "U").charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground">{post.profiles?.username}</span>
-            <span className="text-sm text-muted-foreground">•</span>
-            <span className="text-sm text-muted-foreground">{formattedDate}</span>
-          </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <MessageSquare className="h-4 w-4" />
-            <span className="text-sm">{commentCount}</span>
-          </div>
-        </CardFooter>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <motion.div
+                className="flex items-center gap-1 text-muted-foreground"
+                whileHover={{ scale: 1.1, color: "#10b981" }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-xs font-medium">{commentCount}</span>
+              </motion.div>
+            </div>
+          </CardFooter>
+        </div>
       </Card>
     </motion.div>
   )
