@@ -122,8 +122,8 @@ export function PostCard({ post }: PostCardProps) {
                   text-sm 
                   text-muted-foreground 
                   leading-relaxed 
-                  break-words              /* 修改：添加 break-words，让长单词或长链接自动换行 */
-                  whitespace-pre-wrap       /* 修改：添加 whitespace-pre-wrap，保留换行符并自动换行 */
+                  break-all             /* 修改：改为 break-all，以确保纯数字/纯中文也能随时断行 */
+                  whitespace-pre-wrap    /* 保留换行符并允许自动换行 */
                 "
               >
                 <VideoLinkDetector content={post.content} />
