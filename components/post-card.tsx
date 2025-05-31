@@ -85,25 +85,27 @@ export function PostCard({ post }: PostCardProps) {
 
           {/* 图片区域 - 添加尺寸控制 */}
           {post.image_url && (
-            <div className="px-6 pb-3">
-              <Link href={`/posts/${post.id}`} className="block">
-                <motion.div
-                  className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <Image
-                    src={post.image_url || "/placeholder.svg"}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+  <div className="px-6 pb-3">
+    <Link href={`/posts/${post.id}`} className="block">
+      <motion.div
+        className="relative w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
+        style={{ aspectRatio: "16/9" }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <Image
+          src={post.image_url || "/placeholder.svg"}
+          alt={post.title}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="100vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </motion.div>
+    </Link>
+  </div>
+)}                  
                   {/* 渐变遮罩 */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </motion.div>
