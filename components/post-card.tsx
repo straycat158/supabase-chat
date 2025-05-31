@@ -40,13 +40,17 @@ export function PostCard({ post }: PostCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {/* 外层包裹，保证渐变边框定位正常 */}
       <div className="relative overflow-hidden rounded-lg">
+        {/* 渐变边框层 */}
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
           <div className="h-full w-full rounded-lg bg-white dark:bg-gray-900" />
         </div>
 
+        {/* 卡片本体 */}
         <Card className="group h-full overflow-hidden border-0 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/10 dark:bg-gray-900/80 dark:hover:shadow-green-400/5 relative z-10">
           <div className="flex h-full flex-col">
+            {/* 卡片头部：标题 + 标签 + 删除按钮 */}
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-3 flex-1">
@@ -83,11 +87,12 @@ export function PostCard({ post }: PostCardProps) {
               </div>
             </CardHeader>
 
+            {/* 如果有封面图，显示图片区域 */}
             {post.image_url && (
               <div className="px-6 pb-3">
                 <Link href={`/posts/${post.id}`} className="block">
                   <MotionDiv
-                    className="relative aspect-video w-100xp overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
+                    className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
@@ -109,12 +114,23 @@ export function PostCard({ post }: PostCardProps) {
               </div>
             )}
 
+            {/* 卡片内容 */}
             <CardContent className="flex-grow pb-3">
-              <div className="line-clamp-3 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">
+              <div
+                className="
+                  line-clamp-3 
+                  text-sm 
+                  text-muted-foreground 
+                  leading-relaxed 
+                  break-words              /* 修改：添加 break-words，让长单词或长链接自动换行 */
+                  whitespace-pre-wrap       /* 修改：添加 whitespace-pre-wrap，保留换行符并自动换行 */
+                "
+              >
                 <VideoLinkDetector content={post.content} />
               </div>
             </CardContent>
 
+            {/* 卡片底部：作者头像 + 时间 + 评论数 */}
             <CardFooter className="flex items-center justify-between pt-3 border-t border-green-100 dark:border-green-800/30">
               <div className="flex items-center gap-3">
                 <MotionDiv whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
