@@ -179,7 +179,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
       <div className="space-y-8 pb-8">
         {/* Hero Section */}
         <motion.div
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-8 text-white shadow-2xl"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-6 sm:p-8 text-white shadow-2xl"
           variants={heroVariants}
           initial="hidden"
           animate="visible"
@@ -223,7 +223,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
               社区帖子
             </motion.div>
             <motion.h1
-              className="mb-4 text-4xl font-bold md:text-5xl"
+              className="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
@@ -231,7 +231,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
               探索精彩内容
             </motion.h1>
             <motion.p
-              className="mb-6 text-lg text-white/90 md:text-xl"
+              className="mb-6 text-base text-white/90 sm:text-lg md:text-xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
@@ -305,52 +305,61 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
           )}
         </motion.div>
 
-        {/* 搜索和筛选区域 */}
+        {/* 搜索和筛选区域 - 修改后的响应式布局 */}
         <motion.div
-          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+          className="space-y-4 md:space-y-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <div className="relative w-full md:w-auto md:min-w-[300px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="搜索帖子..."
-              className="pl-10 border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[75%] border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600">
-                  <SelectValue placeholder="排序方式" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">最新发布</SelectItem>
-                  <SelectItem value="oldest">最早发布</SelectItem>
-                  <SelectItem value="comments">评论最多</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {/* 搜索框 - 现在占据全宽 */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="搜索帖子..."
+                className="w-full pl-10 border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
 
-            {session && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-auto md:ml-0">
-                <Button
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg transition-all duration-300"
-                  onClick={() => router.push("/posts/new")}
+            {/* 排序和发布按钮 - 现在在移动端堆叠 */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full md:w-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-[180px] border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600">
+                    <SelectValue placeholder="排序方式" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">最新发布</SelectItem>
+                    <SelectItem value="oldest">最早发布</SelectItem>
+                    <SelectItem value="comments">评论最多</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {session && (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }} 
+                  className="w-full sm:w-auto"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  发布帖子
-                </Button>
-              </motion.div>
-            )}
+                  <Button
+                    className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg transition-all duration-300"
+                    onClick={() => router.push("/posts/new")}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    发布帖子
+                  </Button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </motion.div>
+
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -368,7 +377,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
             </motion.div>
           ) : sortedPosts.length > 0 ? (
             <motion.div
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
               variants={container}
               initial="hidden"
               animate="show"
