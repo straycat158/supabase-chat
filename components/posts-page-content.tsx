@@ -327,7 +327,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600">
+                <SelectTrigger className="w-[75%] border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600">
                   <SelectValue placeholder="排序方式" />
                 </SelectTrigger>
                 <SelectContent>
