@@ -13,6 +13,10 @@ import { DeletePostButton } from "@/components/delete-post-button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
 import { TagBadge } from "@/components/tag-badge"
 
+// motion 元素定义
+const MotionDiv = motion.div
+const MotionSpan = motion.span
+
 interface PostCardProps {
   post: any
 }
@@ -25,11 +29,10 @@ export function PostCard({ post }: PostCardProps) {
     locale: zhCN,
   })
 
-  // 检查当前用户是否为帖子作者
   const isAuthor = user?.id === post.user_id
 
   return (
-    <motion.div
+    <MotionDiv
       className="h-full"
       whileHover={{
         y: -4,
@@ -40,7 +43,6 @@ export function PostCard({ post }: PostCardProps) {
       transition={{ duration: 0.5 }}
     >
       <Card className="group h-full overflow-hidden border-0 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/10 dark:bg-gray-900/80 dark:hover:shadow-green-400/5">
-        {/* 渐变边框效果 */}
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="h-full w-full rounded-lg bg-white dark:bg-gray-900" />
         </div>
@@ -54,19 +56,18 @@ export function PostCard({ post }: PostCardProps) {
                     {post.title}
                   </CardTitle>
                 </Link>
-                {/* 显示标签 */}
                 {post.tags && (
-                  <motion.div
+                  <MotionDiv
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
                   >
                     <TagBadge tag={post.tags} asLink size="sm" />
-                  </motion.div>
+                  </MotionDiv>
                 )}
               </div>
               {isAuthor && (
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
@@ -78,37 +79,33 @@ export function PostCard({ post }: PostCardProps) {
                     className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     showIcon
                   />
-                </motion.div>
+                </MotionDiv>
               )}
             </div>
           </CardHeader>
 
-          {/* 图片区域 - 添加尺寸控制 */}
           {post.image_url && (
-  <div className="px-6 pb-3">
-    <Link href={`/posts/${post.id}`} className="block">
-      <motion.div
-        className="relative w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
-        style={{ aspectRatio: "16/9" }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
-        <Image
-          src={post.image_url || "/placeholder.svg"}
-          alt={post.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="100vw"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      </motion.div>
-    </Link>
-  </div>
-)}                  
-                  {/* 渐变遮罩 */}
+            <div className="px-6 pb-3">
+              <Link href={`/posts/${post.id}`} className="block">
+                <MotionDiv
+                  className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Image
+                    src={post.image_url || "/placeholder.svg"}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                </motion.div>
+                </MotionDiv>
               </Link>
             </div>
           )}
@@ -121,14 +118,14 @@ export function PostCard({ post }: PostCardProps) {
 
           <CardFooter className="flex items-center justify-between pt-3 border-t border-green-100 dark:border-green-800/30">
             <div className="flex items-center gap-3">
-              <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+              <MotionDiv whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
                 <Avatar className="h-7 w-7 ring-2 ring-green-200 dark:ring-green-800">
                   <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
                   <AvatarFallback className="text-xs bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
                     {(post.profiles?.username || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-              </motion.div>
+              </MotionDiv>
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-green-700 dark:text-green-300">
                   {post.profiles?.username}
@@ -138,18 +135,18 @@ export function PostCard({ post }: PostCardProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <motion.div
+              <MotionDiv
                 className="flex items-center gap-1 text-muted-foreground"
                 whileHover={{ scale: 1.1, color: "#10b981" }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <MessageSquare className="h-4 w-4" />
                 <span className="text-xs font-medium">{commentCount}</span>
-              </motion.div>
+              </MotionDiv>
             </div>
           </CardFooter>
         </div>
       </Card>
-    </motion.div>
+    </MotionDiv>
   )
 }
