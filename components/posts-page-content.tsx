@@ -84,12 +84,10 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
 
   const supabase = createClient()
 
-  // 获取所有标签
   useEffect(() => {
     const fetchTags = async () => {
       try {
         const { data, error } = await supabase.from("tags").select("*").order("name")
-
         if (error) throw error
         setTags(data || [])
       } catch (error) {
@@ -100,7 +98,6 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
     fetchTags()
   }, [supabase])
 
-  // 根据标签筛选帖子
   useEffect(() => {
     const fetchFilteredPosts = async () => {
       if (!selectedTagSlug && initialPosts) {
@@ -113,20 +110,19 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
         let tagId = null
         if (selectedTagSlug) {
           const { data: tagData } = await supabase.from("tags").select("id").eq("slug", selectedTagSlug).single()
-
-          if (tagData) {
-            tagId = tagData.id
-          }
+          if (tagData) tagId = tagData.id
         }
 
         const query = supabase
           .from("posts")
-          .select(`
+          .select(
+            `
             *,
             profiles:user_id (id, username, avatar_url),
             comments:comments (id),
             tags:tag_id (*)
-          `)
+          `
+          )
           .order("created_at", { ascending: false })
 
         if (tagId) {
@@ -134,7 +130,6 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
         }
 
         const { data, error } = await query
-
         if (error) throw error
         setPosts(data || [])
       } catch (error) {
@@ -147,7 +142,6 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
     fetchFilteredPosts()
   }, [selectedTagSlug, initialPosts, supabase])
 
-  // 处理标签点击
   const handleTagClick = (slug: string) => {
     if (selectedTagSlug === slug) {
       setSelectedTagSlug(null)
@@ -158,17 +152,15 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
     }
   }
 
-  // 清除标签筛选
   const clearTagFilter = () => {
     setSelectedTagSlug(null)
     router.push("/posts")
   }
 
-  // 过滤和排序帖子
   const filteredPosts = posts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()),
+      post.content.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
@@ -359,8 +351,6 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
             )}
           </div>
         </motion.div>
-
-        {/* 帖子列表 */}
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -383,7 +373,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
               initial="hidden"
               animate="show"
             >
-              {sortedPosts.map((post, index) => (
+              {sortedPosts.map((post) => (
                 <motion.div
                   key={post.id}
                   variants={item}
@@ -393,7 +383,10 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
                   }}
                   layout
                 >
-                  <PostCard post={post} />
+                  <PostCard
+                    post={post}
+                    className="bg-white dark:bg-green-950/40 border border-green-100 dark:border-green-800 rounded-2xl p-4 shadow-md dark:shadow-none overflow-hidden"
+                  />
                 </motion.div>
               ))}
             </motion.div>
