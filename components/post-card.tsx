@@ -40,14 +40,11 @@ export function PostCard({ post }: PostCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* ✅ 新增包裹容器：用于限制渐变边框绝对定位元素的撑宽问题 */}
       <div className="relative overflow-hidden rounded-lg">
-        {/* ✅ 修改渐变边框层：加上 pointer-events-none，防止遮挡交互；保持 absolute 不变 */}
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
           <div className="h-full w-full rounded-lg bg-white dark:bg-gray-900" />
         </div>
 
-        {/* ✅ 将 Card 本体提升为 z-10，并相对定位，避免与边框干扰 */}
         <Card className="group h-full overflow-hidden border-0 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/10 dark:bg-gray-900/80 dark:hover:shadow-green-400/5 relative z-10">
           <div className="flex h-full flex-col">
             <CardHeader className="pb-3">
@@ -113,7 +110,7 @@ export function PostCard({ post }: PostCardProps) {
             )}
 
             <CardContent className="flex-grow pb-3">
-              <div className="line-clamp-3 text-sm text-muted-foreground leading-relaxed">
+              <div className="line-clamp-3 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">
                 <VideoLinkDetector content={post.content} />
               </div>
             </CardContent>
