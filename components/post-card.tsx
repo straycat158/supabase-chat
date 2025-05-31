@@ -90,7 +90,7 @@ export function PostCard({ post }: PostCardProps) {
               <div className="px-6 pb-3">
                 <Link href={`/posts/${post.id}`} className="block">
                   <MotionDiv
-                    className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
+                    className="relative aspect-video w-180xp overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
