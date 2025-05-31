@@ -47,7 +47,6 @@ export default async function PostPage({ params }: PostPageProps) {
     locale: zhCN,
   })
 
-  // 检查当前用户是否为帖子作者
   const isAuthor = session?.user.id === post.user_id
 
   return (
@@ -79,9 +78,8 @@ export default async function PostPage({ params }: PostPageProps) {
           )}
         </div>
 
-        {/* 主要内容卡片 */}
-        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-2xl overflow-hidden">
-          {/* 渐变装饰 */}
+        {/* 帖子卡片 */}
+        <Card className="border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-2xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400" />
 
           <CardHeader className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/10 dark:to-emerald-950/10">
@@ -92,15 +90,13 @@ export default async function PostPage({ params }: PostPageProps) {
                 </CardTitle>
               </div>
 
-              {/* 标签显示 */}
               {post.tags && (
                 <div className="flex items-center gap-2">
                   <TagBadge tag={post.tags} size="md" />
                 </div>
               )}
 
-              {/* 作者信息 */}
-              <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-gray-900/60 rounded-xl border border-green-200/50 dark:border-green-800/50">
+              <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200/50 dark:border-green-800/50">
                 <Avatar className="h-12 w-12 ring-2 ring-green-300 dark:ring-green-700">
                   <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
                   <AvatarFallback className="bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
@@ -110,7 +106,9 @@ export default async function PostPage({ params }: PostPageProps) {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-green-800 dark:text-green-200">{post.profiles?.username}</span>
+                    <span className="font-semibold text-green-800 dark:text-green-200">
+                      {post.profiles?.username}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-3 w-3" />
@@ -122,7 +120,6 @@ export default async function PostPage({ params }: PostPageProps) {
           </CardHeader>
 
           <CardContent className="p-8">
-            {/* 图片显示 - 添加尺寸控制 */}
             {post.image_url && (
               <div className="mb-8">
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 shadow-lg">
@@ -132,27 +129,20 @@ export default async function PostPage({ params }: PostPageProps) {
                     width={800}
                     height={450}
                     className="w-full h-auto object-contain max-h-[500px]"
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      objectFit: "contain",
-                    }}
                     priority
                   />
                 </div>
               </div>
             )}
 
-            {/* 内容 */}
-            <div className="prose prose-lg max-w-none dark:prose-invert prose-green">
-              <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-                <VideoLinkDetector content={post.content} />
-              </div>
+            {/* ✅ 文字内容修复 */}
+            <div className="prose prose-lg max-w-none prose-green dark:prose-invert text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
+              <VideoLinkDetector content={post.content} />
             </div>
           </CardContent>
         </Card>
 
-        {/* 评论区域 */}
+        {/* 评论区 */}
         <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-green-200/50 dark:border-green-800/50 p-6">
           <div className="flex items-center gap-2 mb-6">
             <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
