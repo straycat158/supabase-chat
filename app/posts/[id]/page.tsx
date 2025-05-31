@@ -136,9 +136,9 @@ export default async function PostPage({ params }: PostPageProps) {
             )}
 
             {/* ✅ 文字内容修复 */}
-            <div className="prose prose-lg max-w-none prose-green dark:prose-invert text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
-              <VideoLinkDetector content={post.content} />
-            </div>
+            <div className="text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">
+  <VideoLinkDetector content={post.content} />
+</div>
           </CardContent>
         </Card>
 
