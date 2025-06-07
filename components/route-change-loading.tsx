@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { MinecraftLoading } from "@/components/minecraft-loading"
+import { SimpleLoading } from "@/components/simple-loading"
 
 function RouteChangeLoadingInner() {
   const pathname = usePathname()
@@ -13,23 +13,14 @@ function RouteChangeLoadingInner() {
     const handleStart = () => setLoading(true)
     const handleComplete = () => setLoading(false)
 
-    // 添加事件监听器
-    window.addEventListener("beforeunload", handleStart)
-    window.addEventListener("load", handleComplete)
+    // 模拟路由变化加载
+    setLoading(true)
+    const timer = setTimeout(() => setLoading(false), 300)
 
-    // 清理事件监听器
-    return () => {
-      window.removeEventListener("beforeunload", handleStart)
-      window.removeEventListener("load", handleComplete)
-    }
-  }, [])
-
-  // 当路由变化时重置加载状态
-  useEffect(() => {
-    setLoading(false)
+    return () => clearTimeout(timer)
   }, [pathname, searchParams])
 
-  return loading ? <MinecraftLoading fullScreen text="传送中..." /> : null
+  return loading ? <SimpleLoading fullScreen text="页面加载中" variant="spinner" size="md" /> : null
 }
 
 export function RouteChangeLoading() {

@@ -121,7 +121,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
             profiles:user_id (id, username, avatar_url),
             comments:comments (id),
             tags:tag_id (*)
-          `
+          `,
           )
           .order("created_at", { ascending: false })
 
@@ -160,7 +160,7 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
   const filteredPosts = posts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase())
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {

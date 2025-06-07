@@ -106,9 +106,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-green-800 dark:text-green-200">
-                      {post.profiles?.username}
-                    </span>
+                    <span className="font-semibold text-green-800 dark:text-green-200">{post.profiles?.username}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-3 w-3" />
@@ -137,8 +135,8 @@ export default async function PostPage({ params }: PostPageProps) {
 
             {/* ✅ 文字内容修复 */}
             <div className="text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">
-  <VideoLinkDetector content={post.content} />
-</div>
+              <VideoLinkDetector content={post.content} />
+            </div>
           </CardContent>
         </Card>
 

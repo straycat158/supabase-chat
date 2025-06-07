@@ -1,9 +1,9 @@
-import { MinecraftLoading } from "@/components/minecraft-loading"
+import { SimpleLoading } from "@/components/simple-loading"
 
 export default function PostsLoading() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <MinecraftLoading text="挖掘帖子中..." />
+      <SimpleLoading text="获取帖子中..." variant="dots" size="lg" />
     </div>
   )
 }

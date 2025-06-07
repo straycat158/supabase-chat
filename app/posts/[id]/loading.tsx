@@ -1,9 +1,9 @@
-import { MinecraftLoading } from "@/components/minecraft-loading"
+import { SimpleLoading } from "@/components/simple-loading"
 
 export default function PostLoading() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <MinecraftLoading text="建造内容中..." />
+      <SimpleLoading text="加载内容中..." variant="pulse" size="lg" />
     </div>
   )
 }
