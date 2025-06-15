@@ -1,26 +1,31 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { SimpleLoading } from "@/components/simple-loading"
 
 function RouteChangeLoadingInner() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
+  const [previousPath, setPreviousPath] = useState<string>("")
 
   useEffect(() => {
-    const handleStart = () => setLoading(true)
-    const handleComplete = () => setLoading(false)
+    // 只有当路径真正改变时才显示加载动画
+    if (previousPath && previousPath !== pathname) {
+      setLoading(true)
 
-    // 模拟路由变化加载
-    setLoading(true)
-    const timer = setTimeout(() => setLoading(false), 300)
+      // 模拟页面加载时间
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 500)
 
-    return () => clearTimeout(timer)
-  }, [pathname, searchParams])
+      return () => clearTimeout(timer)
+    }
 
-  return loading ? <SimpleLoading fullScreen text="页面加载中" variant="spinner" size="md" /> : null
+    setPreviousPath(pathname)
+  }, [pathname, previousPath])
+
+  return loading ? <SimpleLoading fullScreen text="页面切换中" variant="spinner" size="md" /> : null
 }
 
 export function RouteChangeLoading() {

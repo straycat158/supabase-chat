@@ -11,6 +11,8 @@ import { motion } from "framer-motion"
 import { formatDistanceToNow } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { useRouter } from "next/navigation"
+import { DashboardClock } from "@/components/dashboard-clock"
+import { DashboardWeather } from "@/components/dashboard-weather"
 
 interface DashboardProps {
   userPosts: any[]
@@ -243,6 +245,17 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
         </div>
       </motion.div>
 
+      {/* 时钟和天气模块 */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <DashboardClock />
+        <DashboardWeather />
+      </motion.div>
+
       {/* 统计卡片 */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
@@ -308,7 +321,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
         className="space-y-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
       >
         <h2 className="text-2xl font-bold">快速操作</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -338,7 +351,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
           className="space-y-4"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
         >
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">我的最新帖子</h2>
@@ -403,7 +416,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
           className="space-y-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
         >
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">社区最新动态</h2>
