@@ -1,29 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const lat = searchParams.get("lat")
-  const lon = searchParams.get("lon")
-  const city = searchParams.get("city") || "Beijing"
-
-  const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
-
-  if (!API_KEY) {
-    return NextResponse.json({ error: "API密钥未配置" }, { status: 500 })
-  }
+  const API_KEY = "99301065916a826fea3d0324e6366bd0"
 
   try {
-    let url = ""
+    // 固定使用北京作为查询城市
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=Beijing,CN&appid=${API_KEY}&units=metric&lang=zh_cn`
 
-    if (lat && lon) {
-      // 使用经纬度获取天气
-      url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_cn`
-    } else {
-      // 使用城市名获取天气
-      url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=zh_cn`
-    }
-
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      next: { revalidate: 1800 }, // 缓存30分钟
+    })
 
     if (!response.ok) {
       throw new Error(`OpenWeatherMap API error: ${response.status}`)
@@ -33,8 +19,8 @@ export async function GET(request: NextRequest) {
 
     // 转换为我们需要的格式
     const weatherData = {
-      location: data.name,
-      country: data.sys.country,
+      location: "北京",
+      country: "中国",
       temperature: Math.round(data.main.temp),
       feelsLike: Math.round(data.main.feels_like),
       condition: data.weather[0].description,

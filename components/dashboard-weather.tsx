@@ -16,6 +16,8 @@ import {
   RefreshCw,
   Sunrise,
   Sunset,
+  CloudSnow,
+  Zap,
 } from "lucide-react"
 
 interface WeatherData {
@@ -38,24 +40,14 @@ export function DashboardWeather() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  const fetchWeather = async (lat?: number, lon?: number) => {
+  const fetchWeather = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      let url = "/api/weather"
-
-      if (lat && lon) {
-        url += `?lat=${lat}&lon=${lon}`
-      } else {
-        // 默认使用北京
-        url += "?city=Beijing"
-      }
-
-      const response = await fetch(url)
+      const response = await fetch("/api/weather")
 
       if (!response.ok) {
         throw new Error("获取天气数据失败")
@@ -76,58 +68,40 @@ export function DashboardWeather() {
     }
   }
 
-  const getCurrentLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          setLocation({ lat: latitude, lon: longitude })
-          fetchWeather(latitude, longitude)
-        },
-        (error) => {
-          console.error("获取位置失败:", error)
-          // 如果获取位置失败，使用默认城市
-          fetchWeather()
-        },
-      )
-    } else {
-      // 浏览器不支持地理位置，使用默认城市
-      fetchWeather()
-    }
-  }
-
   useEffect(() => {
-    getCurrentLocation()
+    fetchWeather()
 
     // 每30分钟更新一次天气
-    const interval = setInterval(
-      () => {
-        if (location) {
-          fetchWeather(location.lat, location.lon)
-        } else {
-          fetchWeather()
-        }
-      },
-      30 * 60 * 1000,
-    )
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [location])
+  }, [])
 
   const getWeatherIcon = (weatherId: number, icon: string) => {
     // 根据天气ID返回对应的图标
     if (weatherId >= 200 && weatherId < 300) {
-      return <CloudRain className="h-6 w-6 text-purple-500" />
-    } else if (weatherId >= 300 && weatherId < 600) {
+      // 雷雨
+      return <Zap className="h-6 w-6 text-purple-500" />
+    } else if (weatherId >= 300 && weatherId < 400) {
+      // 毛毛雨
+      return <CloudRain className="h-6 w-6 text-blue-400" />
+    } else if (weatherId >= 500 && weatherId < 600) {
+      // 雨
       return <CloudRain className="h-6 w-6 text-blue-500" />
     } else if (weatherId >= 600 && weatherId < 700) {
-      return <Cloud className="h-6 w-6 text-gray-400" />
+      // 雪
+      return <CloudSnow className="h-6 w-6 text-gray-300" />
     } else if (weatherId >= 700 && weatherId < 800) {
+      // 大气现象（雾、霾等）
       return <Cloud className="h-6 w-6 text-gray-500" />
     } else if (weatherId === 800) {
+      // 晴天
       return <Sun className="h-6 w-6 text-yellow-500" />
+    } else if (weatherId > 800) {
+      // 多云
+      return <Cloud className="h-6 w-6 text-gray-400" />
     } else {
-      return <Cloud className="h-6 w-6 text-gray-500" />
+      return <Sun className="h-6 w-6 text-yellow-500" />
     }
   }
 
@@ -146,25 +120,28 @@ export function DashboardWeather() {
     })
   }
 
-  const handleRefresh = () => {
-    if (location) {
-      fetchWeather(location.lat, location.lon)
-    } else {
-      fetchWeather()
-    }
+  const getWeatherEmoji = (weatherId: number) => {
+    if (weatherId >= 200 && weatherId < 300) return "⛈️"
+    if (weatherId >= 300 && weatherId < 400) return "🌦️"
+    if (weatherId >= 500 && weatherId < 600) return "🌧️"
+    if (weatherId >= 600 && weatherId < 700) return "❄️"
+    if (weatherId >= 700 && weatherId < 800) return "🌫️"
+    if (weatherId === 800) return "☀️"
+    if (weatherId > 800) return "☁️"
+    return "🌤️"
   }
 
   if (loading) {
     return (
       <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 shadow-lg">
         <CardContent className="p-6">
-          <div className="flex items-center justify-center h-40">
+          <div className="flex flex-col items-center justify-center h-40">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-              className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"
+              className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-3"
             />
-            <span className="ml-3 text-blue-600 dark:text-blue-400">获取天气中...</span>
+            <span className="text-blue-600 dark:text-blue-400 text-sm">获取天气中...</span>
           </div>
         </CardContent>
       </Card>
@@ -178,7 +155,7 @@ export function DashboardWeather() {
           <div className="text-center">
             <Cloud className="h-12 w-12 mx-auto mb-3 opacity-50 text-gray-400" />
             <p className="text-sm text-muted-foreground mb-3">{error || "天气信息暂不可用"}</p>
-            <Button variant="outline" size="sm" onClick={handleRefresh} className="border-gray-300 hover:bg-gray-50">
+            <Button variant="outline" size="sm" onClick={fetchWeather} className="border-gray-300 hover:bg-gray-50">
               <RefreshCw className="h-4 w-4 mr-2" />
               重试
             </Button>
@@ -200,16 +177,18 @@ export function DashboardWeather() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               {getWeatherIcon(weather.weatherId, weather.icon)}
-              <span className="font-medium text-blue-800 dark:text-blue-200">实时天气</span>
+              <span className="font-medium text-blue-800 dark:text-blue-200">北京天气</span>
             </div>
             <div className="flex items-center gap-2">
+              <span className="text-2xl">{getWeatherEmoji(weather.weatherId)}</span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleRefresh}
+                onClick={fetchWeather}
                 className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                disabled={loading}
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </Button>
             </div>
           </div>
@@ -223,7 +202,7 @@ export function DashboardWeather() {
                 <MapPin className="h-3 w-3" />
                 {weather.location}, {weather.country}
               </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400 mt-1">{weather.condition}</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400 mt-1 capitalize">{weather.condition}</div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
