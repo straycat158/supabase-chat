@@ -96,6 +96,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [avatarError, setAvatarError] = useState(false)
   const [userStats, setUserStats] = useState({
     totalPosts: 0,
     totalComments: 0,
@@ -119,6 +120,8 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
 
           if (profile) {
             setUserProfile(profile)
+            // 重置头像错误状态
+            setAvatarError(false)
           }
 
           // 获取用户统计数据
@@ -191,7 +194,28 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
   }
 
   const displayName = userProfile?.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "用户"
-  const avatarUrl = userProfile?.avatar_url || user?.user_metadata?.avatar_url || ""
+
+  // 修复头像URL获取逻辑
+  const getAvatarUrl = () => {
+    // 优先使用 profiles 表中的头像
+    if (userProfile?.avatar_url && !avatarError) {
+      return userProfile.avatar_url
+    }
+    // 备选：用户元数据中的头像
+    if (user?.user_metadata?.avatar_url && !avatarError) {
+      return user.user_metadata.avatar_url
+    }
+    // 如果都没有或者加载失败，返回 null 使用 fallback
+    return null
+  }
+
+  const avatarUrl = getAvatarUrl()
+
+  // 头像加载错误处理
+  const handleAvatarError = () => {
+    console.log("Avatar failed to load, using fallback")
+    setAvatarError(true)
+  }
 
   // 计算用户等级
   const getUserLevel = (posts: number, comments: number) => {
@@ -320,7 +344,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
           </div>
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6">
-            {/* 用户头像 */}
+            {/* 用户头像 - 修复显示问题 */}
             <motion.div
               className="flex-shrink-0"
               whileHover={{ scale: 1.05 }}
@@ -328,8 +352,16 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
             >
               <div className="relative">
                 <Avatar className="h-28 w-28 md:h-36 md:w-36 border-4 border-white/30 shadow-2xl">
-                  <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={displayName} className="object-cover" />
-                  <AvatarFallback className="text-3xl md:text-5xl bg-white/20 text-white font-bold">
+                  {avatarUrl && !avatarError ? (
+                    <AvatarImage
+                      src={avatarUrl || "/placeholder.svg"}
+                      alt={displayName}
+                      className="object-cover"
+                      onError={handleAvatarError}
+                      onLoad={() => console.log("Avatar loaded successfully")}
+                    />
+                  ) : null}
+                  <AvatarFallback className="text-3xl md:text-5xl bg-gradient-to-br from-white/20 to-white/10 text-white font-bold border-2 border-white/20">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -350,7 +382,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
               >
-                <h1 className="text-3xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-white to-white/80 bg-clip-text">
+                <h1 className="text-3xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-white to-white/80 bg-clip-text break-words">
                   欢迎回来，{displayName}！
                 </h1>
                 <p className="text-white/90 text-lg md:text-xl mb-6 leading-relaxed">
@@ -369,7 +401,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.2)" }}
                   >
                     <span className="text-white/70 text-sm">邮箱：</span>
-                    <span className="font-semibold ml-1">{user.email}</span>
+                    <span className="font-semibold ml-1 break-all">{user.email}</span>
                   </motion.div>
                 </div>
               </motion.div>
@@ -466,7 +498,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-lg font-bold text-orange-800 dark:text-orange-200">
+                <div className="text-lg font-bold text-orange-800 dark:text-orange-200 break-words">
                   {safeFormatJoinTime(userStats.joinedDate)}
                 </div>
                 <p className="text-xs text-muted-foreground">前加入</p>
@@ -509,11 +541,13 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                         >
                           {action.icon}
                         </motion.div>
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors break-words">
                             {action.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{action.description}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed break-words">
+                            {action.description}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -559,28 +593,28 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                     <Card className="border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0 pr-4">
                             <Link href={`/posts/${post.id}`}>
-                              <h3 className="font-semibold text-lg hover:text-green-600 dark:hover:text-green-400 transition-colors group-hover:translate-x-1 duration-300">
+                              <h3 className="font-semibold text-lg hover:text-green-600 dark:hover:text-green-400 transition-colors group-hover:translate-x-1 duration-300 break-words line-clamp-2">
                                 {post.title}
                               </h3>
                             </Link>
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed break-words whitespace-pre-wrap">
                               {post.content}
                             </p>
                             <div className="flex items-center gap-4 mt-3">
                               <div className="flex items-center gap-1 text-green-600">
-                                <Clock className="h-3 w-3" />
-                                <span className="text-xs">{safeFormatTime(post.created_at)}</span>
+                                <Clock className="h-3 w-3 flex-shrink-0" />
+                                <span className="text-xs break-words">{safeFormatTime(post.created_at)}</span>
                               </div>
                               <div className="flex items-center gap-1 text-blue-600">
-                                <MessageSquare className="h-3 w-3" />
+                                <MessageSquare className="h-3 w-3 flex-shrink-0" />
                                 <span className="text-xs">{post.comments?.length || 0} 评论</span>
                               </div>
                             </div>
                           </div>
                           {post.image_url && (
-                            <div className="ml-6">
+                            <div className="flex-shrink-0">
                               <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 group-hover:scale-105 transition-transform duration-300">
                                 <img
                                   src={post.image_url || "/placeholder.svg"}
@@ -624,7 +658,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
             )}
           </motion.div>
 
-          {/* 社区最新动态 */}
+          {/* 社区最新动态 - 优化文本换行 */}
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: 20 }}
@@ -659,6 +693,7 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
                           <motion.div
+                            className="flex-shrink-0"
                             whileHover={{ scale: 1.1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 20 }}
                           >
@@ -666,30 +701,35 @@ export function Dashboard({ userPosts, recentPosts, stats }: DashboardProps) {
                               <AvatarImage
                                 src={post.profiles?.avatar_url || ""}
                                 alt={post.profiles?.username || "用户"}
+                                onError={(e) => {
+                                  console.log("Community post avatar failed to load")
+                                }}
                               />
                               <AvatarFallback className="bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
                                 {(post.profiles?.username || "U").charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           </motion.div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-semibold text-green-700 dark:text-green-300">
+                              <span className="font-semibold text-green-700 dark:text-green-300 break-words">
                                 {post.profiles?.username}
                               </span>
-                              <span className="text-xs text-muted-foreground">{safeFormatTime(post.created_at)}</span>
+                              <span className="text-xs text-muted-foreground break-words">
+                                {safeFormatTime(post.created_at)}
+                              </span>
                             </div>
                             <Link href={`/posts/${post.id}`}>
-                              <h3 className="font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors group-hover:translate-x-1 duration-300">
+                              <h3 className="font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors group-hover:translate-x-1 duration-300 break-words line-clamp-2 mb-2">
                                 {post.title}
                               </h3>
                             </Link>
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed break-words whitespace-pre-wrap mb-3">
                               {post.content}
                             </p>
-                            <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2">
                               <div className="flex items-center gap-1 text-blue-600">
-                                <MessageSquare className="h-3 w-3" />
+                                <MessageSquare className="h-3 w-3 flex-shrink-0" />
                                 <span className="text-xs">{post.comments?.length || 0} 评论</span>
                               </div>
                             </div>
