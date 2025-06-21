@@ -247,10 +247,19 @@ export function HomePageContent({ session, latestPosts, stats }: HomePageContent
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button asChild className="shadow-sm">
-              <Link href="/posts">查看全部</Link>
+            <Button asChild className="shadow-sm relative overflow-hidden group">
+              <Link href="/posts" className="relative z-10">
+                <span className="relative z-10">查看全部</span>
+                <motion.div
+                  className="absolute inset-0 bg-primary/20"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: "0%" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              </Link>
             </Button>
           </motion.div>
         </div>

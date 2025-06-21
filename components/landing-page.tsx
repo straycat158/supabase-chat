@@ -206,6 +206,7 @@ export function LandingPage({ latestPosts, stats }: LandingPageProps) {
             <Button variant="outline" asChild className="border-2 border-black dark:border-white font-bold">
               <Link href="/posts">
                 查看更多
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -261,11 +262,16 @@ export function LandingPage({ latestPosts, stats }: LandingPageProps) {
                 size="lg"
                 variant="outline"
                 asChild
-                className="border-2 border-white dark:border-black text-xl px-12 py-8 font-bold"
+                className="border-2 border-white dark:border-black text-white dark:text-black text-xl px-12 py-8 font-bold hover:bg-white/10 dark:hover:bg-black/10 relative overflow-hidden group"
               >
-                <Link href="/login">已有账号？登录
-     <ArrowRight className="ml-2 h-6 w-6" />
-     </Link>
+                <Link href="/login" className="relative z-10">
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    已有账号？登录
+                  </span>
+                  <span className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity duration-300">
+                    登录
+                  </span>
+                </Link>
               </Button>
             </div>
           </motion.div>
