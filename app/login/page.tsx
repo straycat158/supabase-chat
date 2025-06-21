@@ -33,7 +33,7 @@ export default function Login() {
         data: { session },
       } = await supabase.auth.getSession()
       if (session) {
-        router.push("/")
+        router.push("/dashboard")
       }
     }
 
@@ -66,8 +66,8 @@ export default function Login() {
         description: "欢迎回来！",
       })
 
-      // 登录成功后立即重定向到首页
-      router.push("/")
+      // 登录成功后立即重定向到仪表盘
+      router.push("/dashboard")
     } catch (error: any) {
       toast({
         title: "登录失败",

@@ -32,9 +32,15 @@ export default function RootLayout({
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-1 container mx-auto py-6 px-4">{children}</main>
-              <footer className="border-t py-4">
-                <div className="container mx-auto text-center text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} Minecraft论坛 - 由Next.js和Supabase提供支持
+              <footer className="border-t py-6 bg-white dark:bg-black">
+                <div className="container mx-auto text-center space-y-2">
+                  <div className="text-sm font-medium text-black dark:text-white">
+                    © {new Date().getFullYear()} 喵星宇宙艾莫科技工作室版权所有
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    办公地址：湖北省武汉市硚口区武胜西街5附6号(崇仁路地铁站A口步行350米)
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-500">鄂ICP备2025101604号-1</div>
                 </div>
               </footer>
             </div>
