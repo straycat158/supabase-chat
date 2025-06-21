@@ -79,46 +79,36 @@ export function AnnouncementsDisplay() {
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl mb-8 backdrop-blur-md shadow-xl
-      ${
-        isImportant
-          ? "bg-amber-500/10 dark:bg-amber-700/20 border border-amber-200 dark:border-amber-800"
-          : "bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30"
-      }`}
+      className={`relative overflow-hidden mb-8 border-4 border-black dark:border-white bg-white dark:bg-black
+  ${
+    isImportant
+      ? "shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]"
+      : "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+  }`}
     >
-      {/* 背景装饰 */}
+      {/* 几何背景装饰 */}
       <div className="absolute inset-0 z-0">
-        <div
-          className={`absolute inset-0 ${
-            isImportant
-              ? "bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-300/10"
-              : "bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10"
-          }`}
-        ></div>
-        <div
-          className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20 
-          bg-gradient-to-br from-primary via-primary/50 to-primary/20"
-        ></div>
-        <div
-          className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-3xl opacity-20 
-          bg-gradient-to-tr from-primary via-primary/50 to-primary/20"
-        ></div>
+        <div className="absolute top-4 right-4 w-8 h-8 border-2 border-black dark:border-white opacity-20 transform rotate-45"></div>
+        <div className="absolute bottom-4 left-4 w-6 h-6 bg-black dark:bg-white opacity-10 rounded-full"></div>
+        {isImportant && <div className="absolute top-0 left-0 w-full h-2 bg-black dark:bg-white"></div>}
       </div>
 
       {/* 内容 */}
       <div className="relative z-10 p-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-5">
+        <div className="flex flex-col md:flex-row md:items-center gap-6">
           {/* 图标部分 */}
           <div className="flex-shrink-0">
-            <div
-              className={`rounded-full p-4 ${
+            <motion.div
+              className={`w-16 h-16 flex items-center justify-center ${
                 isImportant
-                  ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
-                  : "bg-primary/20 dark:bg-primary/30 text-primary dark:text-primary-foreground"
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "border-4 border-black dark:border-white text-black dark:text-white"
               }`}
+              whileHover={{ rotate: isImportant ? 0 : 45 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               {isImportant ? <AlertCircle className="h-8 w-8" /> : <MegaphoneIcon className="h-8 w-8" />}
-            </div>
+            </motion.div>
           </div>
 
           {/* 内容部分 */}
@@ -133,19 +123,19 @@ export function AnnouncementsDisplay() {
                 className="w-full"
               >
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`text-xl font-bold ${isImportant ? "text-amber-800 dark:text-amber-300" : ""}`}>
-                      {currentAnnouncement.title}
-                    </h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    <h3 className="text-2xl font-black text-black dark:text-white">{currentAnnouncement.title}</h3>
                     {isImportant && (
-                      <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
+                      <span className="inline-flex items-center bg-black dark:bg-white text-white dark:text-black px-3 py-1 text-sm font-bold">
                         重要
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-base line-clamp-3">{currentAnnouncement.content}</p>
-                  <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-1" />
+                  <p className="text-lg font-medium text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
+                    {currentAnnouncement.content}
+                  </p>
+                  <div className="flex items-center text-sm font-bold text-gray-600 dark:text-gray-400">
+                    <Clock className="h-4 w-4 mr-2" />
                     {format(new Date(currentAnnouncement.published_at), "yyyy年MM月dd日", { locale: zhCN })}
                   </div>
                 </div>
@@ -155,31 +145,23 @@ export function AnnouncementsDisplay() {
 
           {/* 导航按钮 */}
           {announcements.length > 1 && (
-            <div className="flex items-center space-x-1 mt-4 md:mt-0">
+            <div className="flex items-center space-x-3 mt-4 md:mt-0">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={prevAnnouncement}
-                className={`h-9 w-9 rounded-full ${
-                  isImportant
-                    ? "hover:bg-amber-200/50 dark:hover:bg-amber-800/50"
-                    : "hover:bg-primary/20 dark:hover:bg-primary/30"
-                }`}
+                className="border-2 border-black dark:border-white font-bold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <span className="text-sm font-medium">
+              <span className="text-lg font-bold text-black dark:text-white">
                 {currentIndex + 1}/{announcements.length}
               </span>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={nextAnnouncement}
-                className={`h-9 w-9 rounded-full ${
-                  isImportant
-                    ? "hover:bg-amber-200/50 dark:hover:bg-amber-800/50"
-                    : "hover:bg-primary/20 dark:hover:bg-primary/30"
-                }`}
+                className="border-2 border-black dark:border-white font-bold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>

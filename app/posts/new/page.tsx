@@ -125,61 +125,149 @@ export default function NewPost() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle>发布新帖子</CardTitle>
-          <CardDescription>分享您的Minecraft经验、问题或创意</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">标题</Label>
-              <Input
-                id="title"
-                name="title"
-                placeholder="帖子标题"
-                required
-                value={formData.title}
-                onChange={handleChange}
-              />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Geometric Header */}
+        <div className="relative mb-8">
+          <div className="absolute -top-2 -left-2 w-16 h-16 border-2 border-black transform rotate-45"></div>
+          <div className="absolute -top-1 -right-1 w-8 h-8 bg-black transform rotate-12"></div>
+          <h1 className="text-3xl font-bold text-center py-8 relative z-10">发布新帖子</h1>
+        </div>
 
-            {/* 添加标签选择器 */}
-            <div className="space-y-2">
-              <Label htmlFor="tag">标签</Label>
-              <TagSelector selectedTagId={formData.tagId} onTagSelect={handleTagSelect} />
-              <p className="text-xs text-muted-foreground">选择一个合适的标签，帮助其他用户更容易找到您的帖子</p>
-            </div>
+        <Card className="border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white relative overflow-hidden">
+          {/* Geometric decorations */}
+          <div className="absolute top-0 right-0 w-20 h-20 border-l-2 border-b-2 border-black"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-black transform rotate-45 -translate-x-8 translate-y-8"></div>
 
-            <div className="space-y-2">
-              <Label htmlFor="content">内容</Label>
-              <Textarea
-                id="content"
-                name="content"
-                placeholder="帖子内容..."
-                required
-                rows={10}
-                value={formData.content}
-                onChange={handleChange}
-              />
+          <CardHeader className="relative z-10 border-b-2 border-black bg-gray-50">
+            <div className="flex items-center gap-4">
+              <div className="w-3 h-3 bg-black transform rotate-45"></div>
+              <div>
+                <CardTitle className="text-2xl font-bold">创建帖子</CardTitle>
+                <CardDescription className="text-gray-600 font-medium">
+                  分享您的Minecraft经验、问题或创意
+                </CardDescription>
+              </div>
+              <div className="w-3 h-3 bg-black transform rotate-45"></div>
             </div>
-            <SupabaseImageUpload
-              onImageUploaded={handleImageUploaded}
-              existingImageUrl={formData.imageUrl}
-              folderPath="post-images"
-            />
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              取消
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "发布中..." : "发布帖子"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+          </CardHeader>
+
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-6 p-6 relative z-10">
+              {/* Title Input */}
+              <div className="space-y-3">
+                <Label htmlFor="title" className="text-lg font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-black"></div>
+                  标题
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="title"
+                    name="title"
+                    placeholder="输入帖子标题..."
+                    required
+                    value={formData.title}
+                    onChange={handleChange}
+                    className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 bg-white text-lg p-4"
+                  />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-black transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Tag Selector */}
+              <div className="space-y-3">
+                <Label htmlFor="tag" className="text-lg font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-black"></div>
+                  标签
+                </Label>
+                <div className="relative border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white p-4">
+                  <TagSelector selectedTagId={formData.tagId} onTagSelect={handleTagSelect} />
+                  <p className="text-sm text-gray-600 mt-2 font-medium">
+                    选择一个合适的标签，帮助其他用户更容易找到您的帖子
+                  </p>
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-black transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Content Textarea */}
+              <div className="space-y-3">
+                <Label htmlFor="content" className="text-lg font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-black"></div>
+                  内容
+                </Label>
+                <div className="relative">
+                  <Textarea
+                    id="content"
+                    name="content"
+                    placeholder="分享您的想法、经验或问题..."
+                    required
+                    rows={12}
+                    value={formData.content}
+                    onChange={handleChange}
+                    className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 bg-white text-base p-4 resize-none"
+                  />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-black transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-3">
+                <Label className="text-lg font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-black"></div>
+                  图片上传
+                </Label>
+                <div className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white p-4 relative">
+                  <SupabaseImageUpload
+                    onImageUploaded={handleImageUploaded}
+                    existingImageUrl={formData.imageUrl}
+                    folderPath="post-images"
+                  />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black transform rotate-45"></div>
+                </div>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex justify-between p-6 border-t-2 border-black bg-gray-50 relative">
+              <div className="absolute top-0 left-4 w-8 h-8 border-2 border-black transform rotate-45 -translate-y-4 bg-gray-50"></div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+                className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 bg-white hover:bg-gray-100 text-black font-bold px-8 py-3"
+              >
+                取消
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 bg-black hover:bg-gray-800 text-white font-bold px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    发布中...
+                  </div>
+                ) : (
+                  "发布帖子"
+                )}
+              </Button>
+
+              <div className="absolute bottom-0 right-4 w-6 h-6 border-2 border-black transform rotate-45 translate-y-3 bg-gray-50"></div>
+            </CardFooter>
+          </form>
+        </Card>
+
+        {/* Bottom geometric decoration */}
+        <div className="flex justify-center mt-8 gap-4">
+          <div className="w-4 h-4 bg-black transform rotate-45"></div>
+          <div className="w-3 h-3 border-2 border-black transform rotate-45"></div>
+          <div className="w-2 h-2 bg-black"></div>
+          <div className="w-3 h-3 border-2 border-black transform rotate-45"></div>
+          <div className="w-4 h-4 bg-black transform rotate-45"></div>
+        </div>
+      </div>
     </div>
   )
 }

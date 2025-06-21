@@ -50,16 +50,11 @@ export default async function PostPage({ params }: PostPageProps) {
   const isAuthor = session?.user.id === post.user_id
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/20 dark:via-emerald-950/20 dark:to-teal-950/20">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-4xl mx-auto space-y-8 pb-8">
-        {/* 返回按钮 */}
+        {/* 返回按钮 - 黑白几何风格 */}
         <div className="flex items-center justify-between pt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="border-green-200 hover:bg-green-50 hover:border-green-300 dark:border-green-800 dark:hover:bg-green-950/20"
-          >
+          <Button variant="outline" size="sm" asChild className="bw-button-outline font-bold">
             <Link href="/posts" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
               <span>返回帖子列表</span>
@@ -73,19 +68,19 @@ export default async function PostPage({ params }: PostPageProps) {
               size="sm"
               showIcon
               showText
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+              className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black font-bold border-2 border-black dark:border-white"
             />
           )}
         </div>
 
-        {/* 帖子卡片 */}
-        <Card className="border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-2xl overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400" />
+        {/* 帖子卡片 - 黑白几何风格 */}
+        <Card className="bw-card overflow-hidden">
+          <div className="h-4 bg-black dark:bg-white" />
 
-          <CardHeader className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/10 dark:to-emerald-950/10">
-            <div className="flex flex-col gap-4">
+          <CardHeader className="bg-gray-50 dark:bg-gray-950 border-b-2 border-black dark:border-white">
+            <div className="flex flex-col gap-6">
               <div className="flex items-start justify-between">
-                <CardTitle className="text-3xl font-bold text-green-800 dark:text-green-200 leading-tight">
+                <CardTitle className="text-4xl font-black text-black dark:text-white leading-tight">
                   {post.title}
                 </CardTitle>
               </div>
@@ -96,21 +91,21 @@ export default async function PostPage({ params }: PostPageProps) {
                 </div>
               )}
 
-              <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200/50 dark:border-green-800/50">
-                <Avatar className="h-12 w-12 ring-2 ring-green-300 dark:ring-green-700">
+              <div className="flex items-center gap-4 p-6 bg-white dark:bg-black border-2 border-black dark:border-white">
+                <Avatar className="h-16 w-16 border-2 border-black dark:border-white">
                   <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
-                  <AvatarFallback className="bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
+                  <AvatarFallback className="bg-gray-100 dark:bg-gray-900 text-black dark:text-white font-black text-xl">
                     {(post.profiles?.username || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-green-800 dark:text-green-200">{post.profiles?.username}</span>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-black dark:text-white" />
+                    <span className="font-black text-xl text-black dark:text-white">{post.profiles?.username}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>{formattedDate}</span>
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+                    <Calendar className="h-4 w-4" />
+                    <span className="font-bold">{formattedDate}</span>
                   </div>
                 </div>
               </div>
@@ -120,7 +115,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <CardContent className="p-8">
             {post.image_url && (
               <div className="mb-8">
-                <div className="relative w-full max-w-4xl mx-auto overflow-hidden rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 shadow-lg">
+                <div className="relative w-full max-w-4xl mx-auto overflow-hidden border-4 border-black dark:border-white bg-gray-100 dark:bg-gray-900">
                   <Image
                     src={post.image_url || "/placeholder.svg"}
                     alt={post.title}
@@ -133,18 +128,20 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
             )}
 
-            {/* ✅ 文字内容修复 */}
-            <div className="text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">
+            {/* 文字内容 - 黑白风格 */}
+            <div className="text-black dark:text-white leading-relaxed whitespace-pre-wrap break-words text-lg font-medium">
               <VideoLinkDetector content={post.content} />
             </div>
           </CardContent>
         </Card>
 
-        {/* 评论区 */}
-        <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-green-200/50 dark:border-green-800/50 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <h2 className="text-xl font-semibold text-green-800 dark:text-green-200">评论讨论</h2>
+        {/* 评论区 - 黑白几何风格 */}
+        <div className="bw-card p-8">
+          <div className="flex items-center gap-3 mb-8 pb-4 border-b-2 border-black dark:border-white">
+            <div className="w-8 h-8 bg-black dark:bg-white flex items-center justify-center">
+              <MessageSquare className="h-5 w-5 text-white dark:text-black" />
+            </div>
+            <h2 className="text-2xl font-black text-black dark:text-white">评论讨论</h2>
           </div>
           <CommentSection postId={post.id} currentUser={session?.user} />
         </div>

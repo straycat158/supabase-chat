@@ -1,10 +1,9 @@
 "use client"
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PostCard } from "@/components/post-card"
-import { Users, MessageSquare, FileText, ArrowRight, Sparkles, Shield, Zap } from "lucide-react"
+import { Users, MessageSquare, FileText, ArrowRight, Square, Circle, Triangle } from "lucide-react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 
 interface LandingPageProps {
   latestPosts: any[]
@@ -17,121 +16,220 @@ interface LandingPageProps {
 
 export function LandingPage({ latestPosts, stats }: LandingPageProps) {
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 text-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="container mx-auto max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Sparkles className="h-4 w-4" />
-            欢迎来到 Minecraft 社区论坛
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            探索无限可能的
-            <br />
-            Minecraft 世界
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            与全球 Minecraft 玩家分享创意、交流技巧、下载资源。 加入我们的社区，开启你的方块世界冒险之旅！
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <Link href="/signup">
-                立即加入社区
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/posts">浏览帖子</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-white dark:bg-black relative overflow-hidden">
+      {/* 几何背景图案 */}
+      <div className="absolute inset-0 geometric-pattern"></div>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                <div className="text-3xl font-bold mb-2">{stats.users}</div>
-                <p className="text-muted-foreground">活跃用户</p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <MessageSquare className="h-12 w-12 text-primary mx-auto mb-4" />
-                <div className="text-3xl font-bold mb-2">{stats.posts}</div>
-                <p className="text-muted-foreground">精彩帖子</p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
-                <div className="text-3xl font-bold mb-2">{stats.comments}</div>
-                <p className="text-muted-foreground">热烈讨论</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 px-4">
+      {/* Hero Section - 创新的黑白设计 */}
+      <section className="relative py-32 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">为什么选择我们的社区？</h2>
-            <p className="text-muted-foreground text-lg">专为 Minecraft 玩家打造的专业交流平台</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* 左侧内容 */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              <div className="space-y-6">
+                <motion.div
+                  className="inline-flex items-center gap-3 px-6 py-3 bg-black dark:bg-white text-white dark:text-black font-bold text-sm tracking-wider"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <Square className="h-4 w-4" />
+                  MINECRAFT FORUM
+                </motion.div>
+
+                <h1 className="text-6xl md:text-8xl font-black leading-none">
+                  <span className="block text-black dark:text-white">BUILD</span>
+                  <span className="block text-black dark:text-white">SHARE</span>
+                  <span className="block bg-black dark:bg-white text-white dark:text-black px-4 py-2 inline-block transform -rotate-2">
+                    EXPLORE
+                  </span>
+                </h1>
+
+                <p className="text-xl text-gray-600 dark:text-gray-400 max-w-lg leading-relaxed">
+                  加入全球最具创意的 Minecraft 社区，分享您的建筑杰作，探索无限可能。
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild className="bw-button text-lg px-8 py-6 font-bold tracking-wide">
+                  <Link href="/signup">
+                    立即加入
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  asChild
+                  className="text-lg px-8 py-6 font-bold tracking-wide border-2 border-black dark:border-white"
+                >
+                  <Link href="/posts">浏览内容</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* 右侧几何图形 */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative h-96 lg:h-[500px]"
+            >
+              <motion.div
+                className="absolute top-0 right-0 w-32 h-32 bg-black dark:bg-white"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              />
+              <motion.div
+                className="absolute top-20 left-10 w-24 h-24 border-4 border-black dark:border-white"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              />
+              <motion.div
+                className="absolute bottom-20 right-20 w-20 h-20 bg-black dark:bg-white transform rotate-45"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="absolute bottom-0 left-0 w-40 h-40 border-8 border-black dark:border-white rounded-full"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+              />
+            </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Stats Section - 极简设计 */}
+      <section className="py-24 px-4 bg-black dark:bg-white text-white dark:text-black">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+            {[
+              { icon: Users, value: stats.users, label: "活跃用户", shape: Square },
+              { icon: MessageSquare, value: stats.posts, label: "精彩帖子", shape: Circle },
+              { icon: FileText, value: stats.comments, label: "热烈讨论", shape: Triangle },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="text-center group"
+              >
+                <div className="relative mb-6">
+                  <motion.div
+                    className="w-20 h-20 mx-auto bg-white dark:bg-black flex items-center justify-center"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <stat.icon className="h-10 w-10 text-black dark:text-white" />
+                  </motion.div>
+                  <motion.div
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-black"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  >
+                    <stat.shape className="h-6 w-6 text-black dark:text-white" />
+                  </motion.div>
+                </div>
+                <div className="text-4xl font-black mb-2">{stat.value}</div>
+                <p className="text-lg font-medium tracking-wide">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - 卡片网格 */}
+      <section className="py-24 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl font-black mb-6 text-black dark:text-white">为什么选择我们？</h2>
+            <div className="w-24 h-1 bg-black dark:bg-white mx-auto"></div>
+          </motion.div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <Zap className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>快速分享</CardTitle>
-                <CardDescription>轻松发布你的建筑作品、游戏心得和创意想法</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <Shield className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>安全可靠</CardTitle>
-                <CardDescription>严格的内容审核机制，确保社区环境健康友好</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <Users className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>活跃社区</CardTitle>
-                <CardDescription>与来自世界各地的 Minecraft 爱好者互动交流</CardDescription>
-              </CardHeader>
-            </Card>
+            {[
+              {
+                title: "快速分享",
+                description: "轻松发布你的建筑作品、游戏心得和创意想法",
+                pattern: "geometric",
+              },
+              {
+                title: "安全可靠",
+                description: "严格的内容审核机制，确保社区环境健康友好",
+                pattern: "stripe",
+              },
+              {
+                title: "活跃社区",
+                description: "与来自世界各地的 Minecraft 爱好者互动交流",
+                pattern: "dots",
+              },
+            ].map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="bw-card p-8 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 stripe-pattern group-hover:opacity-20 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-black dark:bg-white mb-6 flex items-center justify-center">
+                    <div className="w-6 h-6 bg-white dark:bg-black"></div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4 text-black dark:text-white">{feature.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature.description}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Latest Posts Section */}
-      <section className="py-16 px-4 bg-muted/30">
+      <section className="py-24 px-4 bg-gray-50 dark:bg-gray-950">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-bold mb-2">最新帖子</h2>
-              <p className="text-muted-foreground">看看社区成员们在讨论什么</p>
+              <h2 className="text-4xl font-black mb-4 text-black dark:text-white">最新帖子</h2>
+              <div className="w-16 h-1 bg-black dark:bg-white"></div>
             </div>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="border-2 border-black dark:border-white font-bold">
               <Link href="/posts">
                 查看更多
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestPosts && latestPosts.length > 0 ? (
-              latestPosts.map((post) => <PostCard key={post.id} post={post} />)
+              latestPosts.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                >
+                  <PostCard post={post} />
+                </motion.div>
+              ))
             ) : (
-              <div className="col-span-full text-center py-12">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">暂无帖子</h3>
-                <p className="text-muted-foreground">成为第一个发布帖子的用户吧！</p>
+              <div className="col-span-full text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 bg-black dark:bg-white flex items-center justify-center">
+                  <MessageSquare className="h-12 w-12 text-white dark:text-black" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-black dark:text-white">暂无帖子</h3>
+                <p className="text-gray-600 dark:text-gray-400">成为第一个发布帖子的用户吧！</p>
               </div>
             )}
           </div>
@@ -139,21 +237,37 @@ export function LandingPage({ latestPosts, stats }: LandingPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 text-center">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-4">准备好加入我们了吗？</h2>
-          <p className="text-xl text-muted-foreground mb-8">立即注册，开始你的 Minecraft 社区之旅</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <Link href="/signup">
-                免费注册
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/login">已有账号？登录</Link>
-            </Button>
-          </div>
+      <section className="py-32 px-4 bg-black dark:bg-white text-white dark:text-black relative overflow-hidden">
+        <div className="absolute inset-0 stripe-pattern"></div>
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-6xl font-black mb-8">准备好了吗？</h2>
+            <p className="text-2xl mb-12 font-medium">立即加入我们的创意社区</p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Button
+                size="lg"
+                asChild
+                className="bg-white dark:bg-black text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 text-xl px-12 py-8 font-bold"
+              >
+                <Link href="/signup">
+                  免费注册
+                  <ArrowRight className="ml-2 h-6 w-6" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="border-2 border-white dark:border-black text-xl px-12 py-8 font-bold"
+              >
+                <Link href="/login">已有账号？登录</Link>
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>

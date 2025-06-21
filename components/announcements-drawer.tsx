@@ -84,21 +84,22 @@ export function AnnouncementsDrawer({ hasNewAnnouncements, onMarkAsRead }: Annou
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
+        {/* 替换公告按钮部分 */}
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
           <Button
             variant="ghost"
             size="icon"
-            className={`relative transition-all duration-300 ${
+            className={`relative transition-all duration-300 border-2 border-black dark:border-white ${
               hasNewAnnouncements
-                ? "bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border border-red-200 shadow-lg"
-                : "hover:bg-green-50 dark:hover:bg-green-900/20"
+                ? "bg-black dark:bg-white text-white dark:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                : "hover:bg-gray-100 dark:hover:bg-gray-900"
             }`}
           >
             <motion.div
               animate={
                 hasNewAnnouncements
                   ? {
-                      rotate: [0, -10, 10, -10, 0],
+                      rotate: [0, -15, 15, -15, 0],
                       scale: [1, 1.1, 1],
                     }
                   : {}
@@ -109,35 +110,17 @@ export function AnnouncementsDrawer({ hasNewAnnouncements, onMarkAsRead }: Annou
                 repeatDelay: 3,
               }}
             >
-              {hasNewAnnouncements ? (
-                <BellRing className="h-5 w-5 text-red-600" />
-              ) : (
-                <Bell className="h-5 w-5 text-green-600" />
-              )}
+              {hasNewAnnouncements ? <BellRing className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
             </motion.div>
 
             {hasNewAnnouncements && (
               <>
-                {/* 红点提醒 */}
+                {/* 方形提醒 */}
                 <motion.div
-                  className="absolute -top-1 -right-1 h-3 w-3 bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white shadow-lg"
+                  className="absolute -top-2 -right-2 w-4 h-4 bg-black dark:bg-white border-2 border-white dark:border-black"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-
-                {/* 脉冲效果 */}
-                <motion.div
-                  className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"
-                  animate={{
-                    scale: [1, 2, 1],
-                    opacity: [1, 0, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeInOut",
-                  }}
                 />
               </>
             )}
@@ -145,34 +128,33 @@ export function AnnouncementsDrawer({ hasNewAnnouncements, onMarkAsRead }: Annou
         </motion.div>
       </SheetTrigger>
 
-      <SheetContent className="w-[400px] sm:w-[540px] bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50">
-        <SheetHeader className="pb-6">
+      {/* 替换 SheetContent 的样式 */}
+      <SheetContent className="w-[400px] sm:w-[540px] bg-white dark:bg-black border-l-4 border-black dark:border-white">
+        <SheetHeader className="pb-6 border-b-2 border-black dark:border-white">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <SheetTitle className="flex items-center gap-3 text-2xl">
+            <SheetTitle className="flex items-center gap-4 text-3xl">
               <motion.div
-                className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white shadow-lg"
-                whileHover={{ rotate: 5, scale: 1.1 }}
+                className="w-12 h-12 bg-black dark:bg-white text-white dark:text-black flex items-center justify-center"
+                whileHover={{ rotate: 45, scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <MegaphoneIcon className="h-6 w-6" />
               </motion.div>
-              <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                论坛公告
-              </span>
+              <span className="font-black text-black dark:text-white">论坛公告</span>
               {hasNewAnnouncements && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
-                    <Sparkles className="h-3 w-3 mr-1" />
+                  <span className="bg-black dark:bg-white text-white dark:text-black px-3 py-1 text-sm font-bold">
+                    <Sparkles className="h-3 w-3 mr-1 inline" />
                     新消息
-                  </Badge>
+                  </span>
                 </motion.div>
               )}
             </SheetTitle>
-            <SheetDescription className="text-green-600 dark:text-green-400 text-lg">
+            <SheetDescription className="text-lg font-medium text-gray-600 dark:text-gray-400">
               查看最新的论坛公告和重要通知
             </SheetDescription>
           </motion.div>
@@ -225,19 +207,20 @@ export function AnnouncementsDrawer({ hasNewAnnouncements, onMarkAsRead }: Annou
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
                   >
+                    {/* 替换公告卡片的样式 */}
                     <div
-                      className={`rounded-2xl p-6 border-2 shadow-xl ${
+                      className={`border-4 border-black dark:border-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] ${
                         currentAnnouncement.is_important
-                          ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-300 dark:border-amber-700"
-                          : "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-300 dark:border-green-700"
+                          ? "bg-black dark:bg-white text-white dark:text-black"
+                          : "bg-white dark:bg-black"
                       }`}
                     >
                       <div className="flex items-start gap-4">
                         <motion.div
-                          className={`rounded-full p-3 shadow-lg ${
+                          className={`w-12 h-12 flex items-center justify-center ${
                             currentAnnouncement.is_important
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                              : "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                              ? "bg-white dark:bg-black text-black dark:text-white border-2 border-white dark:border-black"
+                              : "bg-black dark:bg-white text-white dark:text-black"
                           }`}
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -250,28 +233,26 @@ export function AnnouncementsDrawer({ hasNewAnnouncements, onMarkAsRead }: Annou
                         </motion.div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-3">
-                            <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
-                              {currentAnnouncement.title}
-                            </h3>
+                            <h3 className="font-black text-xl">{currentAnnouncement.title}</h3>
                             {currentAnnouncement.is_important && (
                               <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                               >
-                                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
-                                  <Star className="h-3 w-3 mr-1" />
+                                <span className="bg-white dark:bg-black text-black dark:text-white px-2 py-1 text-xs font-bold border-2 border-white dark:border-black">
+                                  <Star className="h-3 w-3 mr-1 inline" />
                                   重要
-                                </Badge>
+                                </span>
                               </motion.div>
                             )}
                           </div>
                           <ScrollArea className="h-36 w-full">
-                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                            <p className="font-medium leading-relaxed whitespace-pre-wrap">
                               {currentAnnouncement.content}
                             </p>
                           </ScrollArea>
-                          <div className="flex items-center mt-4 text-sm text-muted-foreground">
+                          <div className="flex items-center mt-4 text-sm font-bold opacity-80">
                             <Clock className="h-4 w-4 mr-2" />
                             {format(new Date(currentAnnouncement.published_at), "yyyy年MM月dd日 HH:mm", {
                               locale: zhCN,

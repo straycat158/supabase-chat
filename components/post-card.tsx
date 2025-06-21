@@ -7,19 +7,19 @@ import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Square } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DeletePostButton } from "@/components/delete-post-button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
-import { TagBadge } from "@/components/tag-badge"
 
 const MotionDiv = motion.div
 
 interface PostCardProps {
   post: any
+  className?: string
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, className }: PostCardProps) {
   const { user } = useAuth()
   const commentCount = Array.isArray(post.comments) ? post.comments.length : 0
   const formattedDate = formatDistanceToNow(new Date(post.created_at), {
@@ -33,136 +33,123 @@ export function PostCard({ post }: PostCardProps) {
     <MotionDiv
       className="h-full"
       whileHover={{
-        y: -4,
+        y: -8,
         transition: { type: "spring", stiffness: 300, damping: 20 },
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* 外层包裹，保证渐变边框定位正常 */}
-      <div className="relative overflow-hidden rounded-lg">
-        {/* 渐变边框层 */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
-          <div className="h-full w-full rounded-lg bg-white dark:bg-gray-900" />
-        </div>
+      <Card className={`bw-card h-full overflow-hidden group transition-all duration-300 ${className}`}>
+        <div className="flex h-full flex-col relative">
+          {/* 几何装饰元素 */}
+          <div className="absolute top-4 right-4 z-10">
+            <motion.div
+              className="w-4 h-4 bg-black dark:bg-white"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+            />
+          </div>
 
-        {/* 卡片本体 */}
-        <Card className="group h-full overflow-hidden border-0 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/10 dark:bg-gray-900/80 dark:hover:shadow-green-400/5 relative z-10">
-          <div className="flex h-full flex-col">
-            {/* 卡片头部：标题 + 标签 + 删除按钮 */}
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col gap-3 flex-1">
-                  <Link href={`/posts/${post.id}`} className="block">
-                    <CardTitle className="text-lg leading-tight transition-colors duration-200 hover:text-green-600 dark:hover:text-green-400 line-clamp-2">
-                      {post.title}
-                    </CardTitle>
-                  </Link>
-                  {post.tags && (
-                    <MotionDiv
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <TagBadge tag={post.tags} asLink size="sm" />
-                    </MotionDiv>
-                  )}
-                </div>
-                {isAuthor && (
+          {/* 卡片头部 */}
+          <CardHeader className="pb-3 relative">
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-3 flex-1">
+                <Link href={`/posts/${post.id}`} className="block">
+                  <CardTitle className="text-xl font-black leading-tight transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-400 line-clamp-2">
+                    {post.title}
+                  </CardTitle>
+                </Link>
+                {post.tags && (
                   <MotionDiv
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.2 }}
                   >
-                    <DeletePostButton
-                      postId={post.id}
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      showIcon
-                    />
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-black dark:bg-white text-white dark:text-black text-xs font-bold tracking-wide">
+                      <Square className="h-3 w-3" />
+                      {post.tags.name}
+                    </div>
                   </MotionDiv>
                 )}
               </div>
-            </CardHeader>
-
-            {/* 如果有封面图，显示图片区域 */}
-            {post.image_url && (
-              <div className="px-6 pb-3">
-                <Link href={`/posts/${post.id}`} className="block">
-                  <MotionDiv
-                    className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20"
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  >
-                    <Image
-                      src={post.image_url || "/placeholder.svg"}
-                      alt={post.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, (max-width: 900px) 50vw, 33vw"
-                      style={{
-                        maxWidth: "100%",
-                        maxHeight: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                  </MotionDiv>
-                </Link>
-              </div>
-            )}
-
-            {/* 卡片内容 */}
-            <CardContent className="flex-grow pb-3">
-              <div
-                className="
-                  line-clamp-3 
-                  text-sm 
-                  text-muted-foreground 
-                  leading-relaxed 
-                  break-all             /* 修改：改为 break-all，以确保纯数字/纯中文也能随时断行 */
-                  whitespace-pre-wrap    /* 保留换行符并允许自动换行 */
-                "
-              >
-                <VideoLinkDetector content={post.content} />
-              </div>
-            </CardContent>
-
-            {/* 卡片底部：作者头像 + 时间 + 评论数 */}
-            <CardFooter className="flex items-center justify-between pt-3 border-t border-green-100 dark:border-green-800/30">
-              <div className="flex items-center gap-3">
-                <MotionDiv whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-                  <Avatar className="h-7 w-7 ring-2 ring-green-200 dark:ring-green-800">
-                    <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
-                    <AvatarFallback className="text-xs bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900 dark:to-emerald-900 dark:text-green-300">
-                      {(post.profiles?.username || "U").charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </MotionDiv>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                    {post.profiles?.username}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{formattedDate}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
+              {isAuthor && (
                 <MotionDiv
-                  className="flex items-center gap-1 text-muted-foreground"
-                  whileHover={{ scale: 1.1, color: "#10b981" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="text-xs font-medium">{commentCount}</span>
+                  <DeletePostButton
+                    postId={post.id}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    showIcon
+                  />
                 </MotionDiv>
+              )}
+            </div>
+          </CardHeader>
+
+          {/* 图片区域 */}
+          {post.image_url && (
+            <div className="px-6 pb-3">
+              <Link href={`/posts/${post.id}`} className="block">
+                <MotionDiv
+                  className="relative aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-900 border-2 border-black dark:border-white"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Image
+                    src={post.image_url || "/placeholder.svg"}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105 grayscale group-hover:grayscale-0"
+                    sizes="(max-width: 768px) 100vw, (max-width: 900px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </MotionDiv>
+              </Link>
+            </div>
+          )}
+
+          {/* 内容区域 */}
+          <CardContent className="flex-grow pb-3">
+            <div className="line-clamp-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed break-all whitespace-pre-wrap">
+              <VideoLinkDetector content={post.content} />
+            </div>
+          </CardContent>
+
+          {/* 底部信息 */}
+          <CardFooter className="flex items-center justify-between pt-3 border-t-2 border-black dark:border-white">
+            <div className="flex items-center gap-3">
+              <MotionDiv whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+                <Avatar className="h-8 w-8 border-2 border-black dark:border-white">
+                  <AvatarImage src={post.profiles?.avatar_url || ""} alt={post.profiles?.username || "用户"} />
+                  <AvatarFallback className="text-xs bg-black dark:bg-white text-white dark:text-black font-bold">
+                    {(post.profiles?.username || "U").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </MotionDiv>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-black dark:text-white">{post.profiles?.username}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
               </div>
-            </CardFooter>
-          </div>
-        </Card>
-      </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <MotionDiv
+                className="flex items-center gap-1 text-black dark:text-white"
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-xs font-bold">{commentCount}</span>
+              </MotionDiv>
+            </div>
+          </CardFooter>
+        </div>
+      </Card>
     </MotionDiv>
   )
 }

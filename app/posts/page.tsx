@@ -19,9 +19,11 @@ export default async function PostsPage() {
     `)
     .order("created_at", { ascending: false })
 
+  const { data: tags } = await supabase.from("tags").select("*").order("name")
+
   if (error) {
     console.error("Error fetching posts:", error)
   }
 
-  return <PostsPageContent session={session} posts={posts || []} />
+  return <PostsPageContent session={session} tags={tags || []} posts={posts || []} />
 }

@@ -1,196 +1,113 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useMemo } from "react"
+import { motion } from "framer-motion"
+import { MessageSquare, Plus, Search } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { PostCard } from "@/components/post-card"
-import { Plus, Search, Filter, Sparkles, TrendingUp } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
-import { Badge } from "@/components/ui/badge"
-import type { Tag } from "@/lib/types/database"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { PostCard } from "@/components/post-card"
+
+interface Tag {
+  id: string
+  name: string
+}
+
+interface Post {
+  id: string
+  title: string
+  content: string
+  created_at: string
+  tag_id?: string
+  tags?: Tag
+  profiles?: {
+    username: string
+    avatar_url?: string
+  }
+  comments?: any[]
+  image_url?: string
+}
 
 interface PostsPageContentProps {
-  session: any
-  posts: any[]
-}
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
-  },
+  session: any | null
+  tags: Tag[]
+  posts: Post[]
 }
 
 const heroVariants = {
-  hidden: { opacity: 0, y: -50 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 20,
       duration: 0.8,
+      ease: "easeInOut",
     },
   },
 }
 
-const filterVariants = {
-  hidden: { opacity: 0, x: -30 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      type: "spring",
-      stiffness: 120,
-      damping: 20,
-      delay: 0.2,
-    },
-  },
-}
-
-export function PostsPageContent({ session, posts: initialPosts }: PostsPageContentProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const tagParam = searchParams.get("tag")
-
+export function PostsPageContent({ session, tags, posts: initialPosts }: PostsPageContentProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedTag, setSelectedTag] = useState<string>("all")
   const [sortBy, setSortBy] = useState("newest")
-  const [selectedTagSlug, setSelectedTagSlug] = useState<string | null>(tagParam)
-  const [tags, setTags] = useState<Tag[]>([])
-  const [posts, setPosts] = useState(initialPosts)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  const supabase = createClient()
+  // 筛选和排序帖子
+  const filteredAndSortedPosts = useMemo(() => {
+    let filtered = initialPosts || []
 
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const { data, error } = await supabase.from("tags").select("*").order("name")
-        if (error) throw error
-        setTags(data || [])
-      } catch (error) {
-        console.error("获取标签失败:", error)
-      }
+    // 按标签筛选
+    if (selectedTag !== "all") {
+      filtered = filtered.filter((post) => post.tag_id === selectedTag)
     }
 
-    fetchTags()
-  }, [supabase])
-
-  useEffect(() => {
-    const fetchFilteredPosts = async () => {
-      if (!selectedTagSlug && initialPosts) {
-        setPosts(initialPosts)
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        let tagId = null
-        if (selectedTagSlug) {
-          const { data: tagData } = await supabase.from("tags").select("id").eq("slug", selectedTagSlug).single()
-          if (tagData) tagId = tagData.id
-        }
-
-        const query = supabase
-          .from("posts")
-          .select(
-            `
-            *,
-            profiles:user_id (id, username, avatar_url),
-            comments:comments (id),
-            tags:tag_id (*)
-          `,
-          )
-          .order("created_at", { ascending: false })
-
-        if (tagId) {
-          query.eq("tag_id", tagId)
-        }
-
-        const { data, error } = await query
-        if (error) throw error
-        setPosts(data || [])
-      } catch (error) {
-        console.error("获取帖子失败:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    // 按搜索词筛选
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim()
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(searchLower) ||
+          post.content.toLowerCase().includes(searchLower) ||
+          (post.profiles?.username && post.profiles.username.toLowerCase().includes(searchLower)),
+      )
     }
 
-    fetchFilteredPosts()
-  }, [selectedTagSlug, initialPosts, supabase])
+    // 排序
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime()
+      const dateB = new Date(b.created_at).getTime()
+      return sortBy === "newest" ? dateB - dateA : dateA - dateB
+    })
 
-  const handleTagClick = (slug: string) => {
-    if (selectedTagSlug === slug) {
-      setSelectedTagSlug(null)
-      router.push("/posts")
-    } else {
-      setSelectedTagSlug(slug)
-      router.push(`/posts?tag=${slug}`)
-    }
-  }
+    return filtered
+  }, [initialPosts, selectedTag, searchTerm, sortBy])
 
-  const clearTagFilter = () => {
-    setSelectedTagSlug(null)
-    router.push("/posts")
-  }
-
-  const filteredPosts = posts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sortBy === "newest") {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    } else if (sortBy === "oldest") {
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    } else if (sortBy === "comments") {
-      return (b.comments?.length || 0) - (a.comments?.length || 0)
-    }
-    return 0
-  })
+  // 获取选中标签的名称
+  const selectedTagName = useMemo(() => {
+    if (selectedTag === "all") return "所有标签"
+    const tag = tags.find((t) => t.id === selectedTag)
+    return tag?.name || "未知标签"
+  }, [selectedTag, tags])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/20 dark:via-emerald-950/20 dark:to-teal-950/20">
-      <div className="space-y-8 pb-8">
-        {/* Hero Section */}
+    <div className="min-h-screen bg-white dark:bg-black">
+      <div className="space-y-0">
+        {/* Hero Section - 黑白几何风格 */}
         <motion.div
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-8 text-white shadow-2xl"
+          className="relative overflow-hidden bg-white dark:bg-black border-b-4 border-black dark:border-white"
           variants={heroVariants}
           initial="hidden"
           animate="visible"
         >
-          {/* 背景装饰 */}
-          <div className="absolute inset-0 overflow-hidden">
+          {/* 几何背景装饰 */}
+          <div className="absolute inset-0">
             <motion.div
-              className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-white/10 blur-3xl"
+              className="absolute top-0 left-0 w-32 h-32 bg-black dark:bg-white transform rotate-45 -translate-x-16 -translate-y-16 opacity-10"
               animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, 180, 360],
+                rotate: [45, 225, 45],
               }}
               transition={{
                 duration: 20,
@@ -198,235 +115,178 @@ export function PostsPageContent({ session, posts: initialPosts }: PostsPageCont
                 ease: "linear",
               }}
             />
+            <div className="absolute top-20 right-20 w-16 h-16 border-4 border-black dark:border-white opacity-20"></div>
+            <div className="absolute bottom-0 right-0 w-24 h-24 bg-black dark:bg-white rounded-full -translate-y-12 translate-x-12 opacity-10"></div>
             <motion.div
-              className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-white/10 blur-3xl"
+              className="absolute top-1/2 left-1/4 w-8 h-8 border-2 border-black dark:border-white transform rotate-45"
               animate={{
-                scale: [1.2, 1, 1.2],
-                rotate: [360, 180, 0],
+                rotate: [45, 405, 45],
+                scale: [1, 1.2, 1],
               }}
               transition={{
-                duration: 25,
+                duration: 15,
                 repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
+                ease: "easeInOut",
               }}
             />
           </div>
 
-          <div className="relative z-10 max-w-3xl">
-            <motion.div
-              className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            >
-              <Sparkles className="h-4 w-4" />
-              社区帖子
-            </motion.div>
-            <motion.h1
-              className="mb-4 text-4xl font-bold md:text-5xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              探索精彩内容
-            </motion.h1>
-            <motion.p
-              className="mb-6 text-lg text-white/90 md:text-xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            >
-              浏览社区中的精彩帖子，分享您的想法和经验，与其他玩家交流互动。
-            </motion.p>
-            {session && (
-              <motion.div
+          <div className="relative z-10 container mx-auto px-4 py-16">
+            <div className="text-center space-y-8">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-block">
+                <div className="w-20 h-20 bg-black dark:bg-white mx-auto mb-6 flex items-center justify-center transform rotate-45 shadow-[8px_8px_0px_rgba(0,0,0,0.3)] dark:shadow-[8px_8px_0px_rgba(255,255,255,0.3)]">
+                  <MessageSquare className="h-10 w-10 text-white dark:text-black transform -rotate-45" />
+                </div>
+              </motion.div>
+
+              <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                transition={{ delay: 0.1 }}
+                className="text-7xl font-black tracking-tight text-black dark:text-white"
               >
-                <Button
-                  className="bg-white text-green-700 hover:bg-white/90 shadow-lg transition-all duration-300"
-                  onClick={() => router.push("/posts/new")}
-                  size="lg"
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  发布帖子
-                </Button>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
+                帖子广场
+              </motion.h1>
 
-        {/* 标签筛选区域 */}
-        <motion.div className="flex flex-wrap gap-3" variants={filterVariants} initial="hidden" animate="visible">
-          <AnimatePresence>
-            {tags.map((tag, index) => (
-              <motion.div
-                key={tag.id}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto font-bold"
               >
-                <Badge
-                  variant={selectedTagSlug === tag.slug ? "default" : "outline"}
-                  className={`cursor-pointer transition-all duration-300 ${
-                    selectedTagSlug === tag.slug
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-                      : "hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950/20"
-                  }`}
-                  onClick={() => handleTagClick(tag.slug)}
-                >
-                  {tag.name}
-                </Badge>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                分享你的 Minecraft 经验，与社区成员交流互动
+              </motion.p>
 
-          {selectedTagSlug && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearTagFilter}
-                className="h-6 px-3 text-xs hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20"
-              >
-                清除筛选
-              </Button>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* 搜索和筛选区域 */}
-        <motion.div
-          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          <div className="relative w-full md:w-auto md:min-w-[300px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="搜索帖子..."
-              className="pl-10 border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] border-green-200 focus:border-green-400 focus:ring-green-400/20 dark:border-green-800 dark:focus:border-green-600">
-                  <SelectValue placeholder="排序方式" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">最新发布</SelectItem>
-                  <SelectItem value="oldest">最早发布</SelectItem>
-                  <SelectItem value="comments">评论最多</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {session && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-auto md:ml-0">
-                <Button
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg transition-all duration-300"
-                  onClick={() => router.push("/posts/new")}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  发布帖子
-                </Button>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              className="text-center py-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-r-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-              />
-              <p className="mt-4 text-muted-foreground">加载中...</p>
-            </motion.div>
-          ) : sortedPosts.length > 0 ? (
-            <motion.div
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              variants={container}
-              initial="hidden"
-              animate="show"
-            >
-              {sortedPosts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  variants={item}
-                  whileHover={{
-                    y: -8,
-                    transition: { type: "spring", stiffness: 300, damping: 20 },
-                  }}
-                  layout
-                >
-                  <PostCard
-                    post={post}
-                    className="bg-white dark:bg-green-950/40 border border-green-100 dark:border-green-800 rounded-2xl p-4 shadow-md dark:shadow-none overflow-hidden"
-                  />
+              {session && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <Button
+                    className="bw-button font-black text-xl px-10 py-4 h-auto"
+                    onClick={() => router.push("/posts/new")}
+                  >
+                    <Plus className="mr-3 h-6 w-6" />
+                    发布新帖子
+                  </Button>
                 </motion.div>
-              ))}
-            </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 搜索筛选区域 */}
+        <div className="bg-gray-50 dark:bg-gray-950 border-b-2 border-black dark:border-white">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Input
+                  placeholder="搜索帖子..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-2 border-black dark:border-white font-medium"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Select value={selectedTag} onValueChange={setSelectedTag}>
+                  <SelectTrigger className="w-40 border-2 border-black dark:border-white font-medium">
+                    <SelectValue placeholder="选择标签" />
+                  </SelectTrigger>
+                  <SelectContent className="border-2 border-black dark:border-white">
+                    <SelectItem value="all" className="font-medium">
+                      所有标签
+                    </SelectItem>
+                    {tags.map((tag) => (
+                      <SelectItem key={tag.id} value={tag.id} className="font-medium">
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-32 border-2 border-black dark:border-white font-medium">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-2 border-black dark:border-white">
+                    <SelectItem value="newest" className="font-medium">
+                      最新
+                    </SelectItem>
+                    <SelectItem value="oldest" className="font-medium">
+                      最旧
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 帖子列表 */}
+        <div className="container mx-auto px-4 py-8">
+          {filteredAndSortedPosts && filteredAndSortedPosts.length > 0 ? (
+            <>
+              {/* 显示筛选信息 */}
+              {(selectedTag !== "all" || searchTerm.trim()) && (
+                <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-900 border-2 border-black dark:border-white">
+                  <p className="text-black dark:text-white font-bold">
+                    {searchTerm.trim() && selectedTag !== "all"
+                      ? `搜索 "${searchTerm}" 在 "${selectedTagName}" 标签下，找到 ${filteredAndSortedPosts.length} 个结果`
+                      : searchTerm.trim()
+                        ? `搜索 "${searchTerm}"，找到 ${filteredAndSortedPosts.length} 个结果`
+                        : `"${selectedTagName}" 标签下有 ${filteredAndSortedPosts.length} 个帖子`}
+                  </p>
+                </div>
+              )}
+
+              <motion.div
+                className="grid gap-6 md:grid-cols-2 lg:grid-cols-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                {filteredAndSortedPosts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                  >
+                    <PostCard post={post} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </>
           ) : (
             <motion.div
-              className="text-center py-16 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/10 dark:to-emerald-950/10 rounded-2xl border border-green-200/50 dark:border-green-800/50"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="text-center py-16"
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <TrendingUp className="h-16 w-16 text-green-400 mx-auto mb-6" />
-                {searchTerm || selectedTagSlug ? (
-                  <>
-                    <h3 className="text-xl font-semibold mb-2 text-green-800 dark:text-green-200">
-                      没有找到匹配的帖子
-                    </h3>
-                    <p className="text-green-600 dark:text-green-400 mb-6">尝试使用其他关键词或标签</p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-semibold mb-2 text-green-800 dark:text-green-200">还没有帖子</h3>
-                    <p className="text-green-600 dark:text-green-400 mb-6">成为第一个发帖的用户吧！</p>
-                  </>
-                )}
+              <div className="bw-card p-16 max-w-md mx-auto">
+                <div className="w-24 h-24 mx-auto mb-8 bg-black dark:bg-white flex items-center justify-center">
+                  <MessageSquare className="h-12 w-12 text-white dark:text-black" />
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-black dark:text-white">
+                  {selectedTag !== "all" || searchTerm.trim() ? "没有找到匹配的帖子" : "还没有帖子"}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                  {selectedTag !== "all" || searchTerm.trim()
+                    ? `在${selectedTag !== "all" ? `"${selectedTagName}"标签` : ""}${searchTerm.trim() ? `搜索"${searchTerm}"` : ""}中没有找到相关帖子，试试发布一个新帖子吧！`
+                    : "成为第一个发帖的用户吧！"}
+                </p>
                 {session && (
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg"
-                      onClick={() => router.push("/posts/new")}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
+                  <Button asChild className="bw-button font-bold">
+                    <Link href="/posts/new">
+                      <Plus className="h-4 w-4 mr-2" />
                       发布帖子
-                    </Button>
-                  </motion.div>
+                    </Link>
+                  </Button>
                 )}
-              </motion.div>
+              </div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </div>
   )

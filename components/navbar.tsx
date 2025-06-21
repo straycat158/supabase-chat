@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Hammer, LogOut, User, Plus, Home, MessageSquare, Menu, X, BookOpen, LayoutDashboard } from "lucide-react"
+import { Square, LogOut, User, Plus, Home, MessageSquare, Menu, X, BookOpen, LayoutDashboard } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -62,111 +62,65 @@ export function Navbar() {
   return (
     <motion.header
       className={cn(
-        "sticky top-0 z-50 transition-all duration-300",
-        isScrolled ? "bg-background/95 backdrop-blur-md shadow-sm" : "bg-background/50 backdrop-blur-sm",
+        "sticky top-0 z-50 transition-all duration-300 border-b-2 border-black dark:border-white",
+        isScrolled ? "bg-white/95 dark:bg-black/95 backdrop-blur-md" : "bg-white/90 dark:bg-black/90 backdrop-blur-sm",
       )}
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
-            <motion.div whileHover={{ rotate: 20 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-              <Hammer className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-3">
+            <motion.div
+              whileHover={{ rotate: 90 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="w-8 h-8 bg-black dark:bg-white flex items-center justify-center"
+            >
+              <Square className="h-5 w-5 text-white dark:text-black" />
             </motion.div>
-            <span className="text-xl font-bold">Minecraft论坛</span>
+            <span className="text-2xl font-black tracking-tight text-black dark:text-white">MINECRAFT</span>
           </Link>
 
           {/* 桌面导航 */}
-          <nav className="hidden md:flex gap-6">
-            <Link
-              href="/"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary relative group",
-                isActive("/") ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <div className="flex items-center gap-1">
-                <Home className="h-4 w-4" />
-                <span>首页</span>
-              </div>
-              <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-              {isActive("/") && (
-                <motion.div
-                  className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
-                  layoutId="navbar-indicator"
-                />
-              )}
-            </Link>
-
-            {/* 仪表盘按钮 - 仅登录用户可见 */}
-            {user && (
+          <nav className="hidden md:flex gap-8">
+            {[
+              { href: "/", label: "首页", icon: Home },
+              ...(user ? [{ href: "/dashboard", label: "仪表盘", icon: LayoutDashboard }] : []),
+              { href: "/posts", label: "帖子", icon: MessageSquare },
+              { href: "/resources", label: "资源", icon: BookOpen },
+            ].map((item) => (
               <Link
-                href="/dashboard"
+                key={item.href}
+                href={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary relative group",
-                  isActive("/dashboard") ? "text-primary" : "text-muted-foreground",
+                  "flex items-center gap-2 text-sm font-bold tracking-wide transition-colors relative group",
+                  isActive(item.href)
+                    ? "text-black dark:text-white"
+                    : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
                 )}
               >
-                <div className="flex items-center gap-1">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>仪表盘</span>
-                </div>
-                <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-                {isActive("/dashboard") && (
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+                {isActive(item.href) && (
                   <motion.div
-                    className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
+                    className="absolute -bottom-6 left-0 right-0 h-1 bg-black dark:bg-white"
                     layoutId="navbar-indicator"
                   />
                 )}
               </Link>
-            )}
-
-            <Link
-              href="/posts"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary relative group",
-                isActive("/posts") ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" />
-                <span>帖子</span>
-              </div>
-              <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-              {isActive("/posts") && (
-                <motion.div
-                  className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
-                  layoutId="navbar-indicator"
-                />
-              )}
-            </Link>
-            <Link
-              href="/resources"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary relative group",
-                isActive("/resources") ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <div className="flex items-center gap-1">
-                <BookOpen className="h-4 w-4" />
-                <span>资源</span>
-              </div>
-              <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-              {isActive("/resources") && (
-                <motion.div
-                  className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-primary"
-                  layoutId="navbar-indicator"
-                />
-              )}
-            </Link>
+            ))}
           </nav>
         </div>
 
         {/* 移动菜单按钮 */}
         <div className="md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="border-2 border-black dark:border-white"
+          >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
@@ -181,53 +135,47 @@ export function Navbar() {
               {user ? (
                 <div className="flex items-center gap-4">
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="outline" size="sm" onClick={handleCreatePost} className="shadow-sm">
+                    <Button onClick={handleCreatePost} className="bw-button font-bold tracking-wide">
                       <Plus className="h-4 w-4 mr-2" />
-                      发布帖子
+                      发布
                     </Button>
                   </motion.div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full">
-                        <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                      <Button variant="ghost" size="icon" className="border-2 border-black dark:border-white">
+                        <Avatar className="h-8 w-8">
                           <AvatarImage
                             src={user.user_metadata?.avatar_url || ""}
                             alt={user.user_metadata?.username || "用户"}
                           />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-black dark:bg-white text-white dark:text-black font-bold">
                             {(user.user_metadata?.username || user.email?.charAt(0) || "U").charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-56 border-2 border-black dark:border-white">
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user.user_metadata?.username || "用户"}</p>
+                          <p className="font-bold">{user.user_metadata?.username || "用户"}</p>
                           <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
-                      <DropdownMenuSeparator />
+                      <DropdownMenuSeparator className="bg-black dark:bg-white h-0.5" />
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard" className="cursor-pointer">
+                        <Link href="/dashboard" className="cursor-pointer font-medium">
                           <LayoutDashboard className="h-4 w-4 mr-2" />
                           仪表盘
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
+                        <Link href="/profile" className="cursor-pointer font-medium">
                           <User className="h-4 w-4 mr-2" />
                           个人资料
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile/images" className="cursor-pointer">
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          我的图片
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                      <DropdownMenuSeparator className="bg-black dark:bg-white h-0.5" />
+                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer font-medium">
                         <LogOut className="h-4 w-4 mr-2" />
                         退出登录
                       </DropdownMenuItem>
@@ -235,14 +183,14 @@ export function Navbar() {
                   </DropdownMenu>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button asChild variant="ghost" size="sm">
+                    <Button asChild variant="ghost" className="font-bold">
                       <Link href="/login">登录</Link>
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button asChild size="sm" className="shadow-sm">
+                    <Button asChild className="bw-button font-bold">
                       <Link href="/signup">注册</Link>
                     </Button>
                   </motion.div>
@@ -256,74 +204,44 @@ export function Navbar() {
       {/* 移动菜单 */}
       {mobileMenuOpen && (
         <motion.div
-          className="md:hidden"
+          className="md:hidden border-t-2 border-black dark:border-white"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="border-t px-4 py-3 space-y-3">
-            <Link
-              href="/"
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md",
-                isActive("/") ? "bg-primary/10 text-primary" : "text-foreground",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Home className="h-5 w-5" />
-              <span>首页</span>
-            </Link>
-
-            {/* 移动端仪表盘按钮 */}
-            {user && (
+          <div className="px-4 py-6 space-y-4 bg-white dark:bg-black">
+            {[
+              { href: "/", label: "首页", icon: Home },
+              ...(user ? [{ href: "/dashboard", label: "仪表盘", icon: LayoutDashboard }] : []),
+              { href: "/posts", label: "帖子", icon: MessageSquare },
+              { href: "/resources", label: "资源", icon: BookOpen },
+            ].map((item) => (
               <Link
-                href="/dashboard"
+                key={item.href}
+                href={item.href}
                 className={cn(
-                  "flex items-center gap-2 p-2 rounded-md",
-                  isActive("/dashboard") ? "bg-primary/10 text-primary" : "text-foreground",
+                  "flex items-center gap-3 p-3 font-bold tracking-wide border-2 transition-colors",
+                  isActive(item.href)
+                    ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white"
+                    : "border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900",
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <LayoutDashboard className="h-5 w-5" />
-                <span>仪表盘</span>
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
               </Link>
-            )}
+            ))}
 
-            <Link
-              href="/posts"
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md",
-                isActive("/posts") ? "bg-primary/10 text-primary" : "text-foreground",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <MessageSquare className="h-5 w-5" />
-              <span>帖子</span>
-            </Link>
-            <Link
-              href="/resources"
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md",
-                isActive("/resources") ? "bg-primary/10 text-primary" : "text-foreground",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <BookOpen className="h-5 w-5" />
-              <span>资源</span>
-            </Link>
-
-            {/* 添加公告按钮 */}
-            <div className="flex items-center justify-between p-2">
-              <span className="text-sm font-medium">公告通知</span>
+            <div className="pt-4 border-t-2 border-black dark:border-white">
               <AnnouncementsDrawer hasNewAnnouncements={hasNewAnnouncements} onMarkAsRead={markAsRead} />
             </div>
 
             {user ? (
-              <>
+              <div className="space-y-3 pt-4">
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 p-2 rounded-md"
+                  className="flex items-center gap-3 p-3 border-2 border-black dark:border-white font-bold"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <User className="h-5 w-5" />
@@ -331,7 +249,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/posts/new"
-                  className="flex items-center gap-2 p-2 rounded-md bg-primary text-white"
+                  className="flex items-center gap-3 p-3 bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white font-bold"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Plus className="h-5 w-5" />
@@ -339,24 +257,24 @@ export function Navbar() {
                 </Link>
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start border-2 border-black dark:border-white font-bold"
                   onClick={() => {
                     handleSignOut()
                     setMobileMenuOpen(false)
                   }}
                 >
-                  <LogOut className="h-5 w-5 mr-2" />
+                  <LogOut className="h-5 w-5 mr-3" />
                   <span>退出登录</span>
                 </Button>
-              </>
+              </div>
             ) : (
-              <div className="flex gap-2 pt-2">
-                <Button asChild variant="outline" className="flex-1">
+              <div className="flex gap-3 pt-4">
+                <Button asChild variant="outline" className="flex-1 border-2 border-black dark:border-white font-bold">
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                     登录
                   </Link>
                 </Button>
-                <Button asChild className="flex-1">
+                <Button asChild className="flex-1 bw-button font-bold">
                   <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
                     注册
                   </Link>
