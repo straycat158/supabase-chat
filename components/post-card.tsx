@@ -29,9 +29,10 @@ export function PostCard({ post, className }: PostCardProps) {
 
   const isAuthor = user?.id === post.user_id
 
-  // 获取图片信息
+  // 获取图片信息 - 只有真正有图片时才显示
   const imageUrls = post.image_urls || (post.image_url ? [post.image_url] : [])
   const coverImage = imageUrls[0] || post.image_url
+  const hasImages = coverImage && coverImage !== "/placeholder.svg"
   const hasMultipleImages = imageUrls.length > 1
 
   return (
@@ -96,8 +97,8 @@ export function PostCard({ post, className }: PostCardProps) {
             </div>
           </CardHeader>
 
-          {/* 图片区域 */}
-          {coverImage && (
+          {/* 图片区域 - 只有真正有图片时才显示 */}
+          {hasImages && (
             <div className="px-6 pb-3">
               <Link href={`/posts/${post.id}`} className="block">
                 <MotionDiv

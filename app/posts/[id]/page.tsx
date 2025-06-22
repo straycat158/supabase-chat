@@ -50,8 +50,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const isAuthor = session?.user.id === post.user_id
 
-  // 获取图片信息
+  // 获取图片信息 - 只有真正有图片时才显示
   const imageUrls = post.image_urls || (post.image_url ? [post.image_url] : [])
+  const validImageUrls = imageUrls.filter((url: string) => url && url !== "/placeholder.svg")
+  const coverImage = validImageUrls[0]
+  const hasImages = validImageUrls.length > 0
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -117,12 +120,12 @@ export default async function PostPage({ params }: PostPageProps) {
           </CardHeader>
 
           <CardContent className="p-8">
-            {/* 封面图片 */}
-            {imageUrls.length > 0 && (
+            {/* 封面图片 - 只有真正有图片时才显示 */}
+            {coverImage && (
               <div className="mb-8">
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden border-4 border-black dark:border-white bg-gray-100 dark:bg-gray-900">
                   <Image
-                    src={imageUrls[0] || "/placeholder.svg"}
+                    src={coverImage || "/placeholder.svg"}
                     alt={post.title}
                     width={800}
                     height={450}
@@ -138,8 +141,8 @@ export default async function PostPage({ params }: PostPageProps) {
               <VideoLinkDetector content={post.content} />
             </div>
 
-            {/* 图片画廊 */}
-            {imageUrls.length > 0 && <ImageGallery images={imageUrls} />}
+            {/* 图片画廊 - 只有真正有图片时才显示 */}
+            {hasImages && <ImageGallery images={validImageUrls} />}
           </CardContent>
         </Card>
 
