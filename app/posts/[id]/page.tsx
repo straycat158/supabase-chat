@@ -12,6 +12,7 @@ import Link from "next/link"
 import { ArrowLeft, Calendar, MessageSquare, User } from "lucide-react"
 import { VideoLinkDetector } from "@/components/video-link-detector"
 import { TagBadge } from "@/components/tag-badge"
+import { ImageGallery } from "@/components/image-gallery"
 
 export const revalidate = 0
 
@@ -48,6 +49,9 @@ export default async function PostPage({ params }: PostPageProps) {
   })
 
   const isAuthor = session?.user.id === post.user_id
+
+  // 获取图片信息
+  const imageUrls = post.image_urls || (post.image_url ? [post.image_url] : [])
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -113,11 +117,12 @@ export default async function PostPage({ params }: PostPageProps) {
           </CardHeader>
 
           <CardContent className="p-8">
-            {post.image_url && (
+            {/* 封面图片 */}
+            {imageUrls.length > 0 && (
               <div className="mb-8">
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden border-4 border-black dark:border-white bg-gray-100 dark:bg-gray-900">
                   <Image
-                    src={post.image_url || "/placeholder.svg"}
+                    src={imageUrls[0] || "/placeholder.svg"}
                     alt={post.title}
                     width={800}
                     height={450}
@@ -129,9 +134,12 @@ export default async function PostPage({ params }: PostPageProps) {
             )}
 
             {/* 文字内容 - 黑白风格 */}
-            <div className="text-black dark:text-white leading-relaxed whitespace-pre-wrap break-words text-lg font-medium">
+            <div className="text-black dark:text-white leading-relaxed whitespace-pre-wrap break-words text-lg font-medium mb-8">
               <VideoLinkDetector content={post.content} />
             </div>
+
+            {/* 图片画廊 */}
+            {imageUrls.length > 0 && <ImageGallery images={imageUrls} />}
           </CardContent>
         </Card>
 

@@ -7,7 +7,7 @@ import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageSquare, Square } from "lucide-react"
+import { MessageSquare, Square, ImageIcon } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DeletePostButton } from "@/components/delete-post-button"
 import { VideoLinkDetector } from "@/components/video-link-detector"
@@ -28,6 +28,11 @@ export function PostCard({ post, className }: PostCardProps) {
   })
 
   const isAuthor = user?.id === post.user_id
+
+  // 获取图片信息
+  const imageUrls = post.image_urls || (post.image_url ? [post.image_url] : [])
+  const coverImage = imageUrls[0] || post.image_url
+  const hasMultipleImages = imageUrls.length > 1
 
   return (
     <MotionDiv
@@ -92,7 +97,7 @@ export function PostCard({ post, className }: PostCardProps) {
           </CardHeader>
 
           {/* 图片区域 */}
-          {post.image_url && (
+          {coverImage && (
             <div className="px-6 pb-3">
               <Link href={`/posts/${post.id}`} className="block">
                 <MotionDiv
@@ -101,13 +106,21 @@ export function PostCard({ post, className }: PostCardProps) {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <Image
-                    src={post.image_url || "/placeholder.svg"}
+                    src={coverImage || "/placeholder.svg"}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105 grayscale group-hover:grayscale-0"
                     sizes="(max-width: 768px) 100vw, (max-width: 900px) 50vw, 33vw"
                   />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  {/* 多图标识 */}
+                  {hasMultipleImages && (
+                    <div className="absolute top-2 right-2 bg-black/80 text-white px-2 py-1 text-xs font-bold flex items-center gap-1">
+                      <ImageIcon className="h-3 w-3" />
+                      {imageUrls.length}
+                    </div>
+                  )}
                 </MotionDiv>
               </Link>
             </div>
@@ -153,3 +166,6 @@ export function PostCard({ post, className }: PostCardProps) {
     </MotionDiv>
   )
 }
+
+// 保持向后兼容
+export default PostCard

@@ -11,9 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { SupabaseImageUpload } from "@/components/supabase-image-upload"
+import { MultiImageUpload } from "@/components/multi-image-upload"
 import { useAuth } from "@/components/auth-provider"
-import { TagSelector } from "@/components/tag-selector" // 导入标签选择器
+import { TagSelector } from "@/components/tag-selector"
 
 export default function NewPost() {
   const router = useRouter()
@@ -24,11 +24,10 @@ export default function NewPost() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    imageUrl: "",
-    tagId: null as string | null, // 添加标签ID字段
+    imageUrls: [] as string[],
+    tagId: null as string | null,
   })
 
-  // 在组件加载时检查用户是否已登录
   useEffect(() => {
     if (!isAuthLoading && !user) {
       toast({
@@ -47,10 +46,10 @@ export default function NewPost() {
     })
   }
 
-  const handleImageUploaded = (url: string) => {
+  const handleImagesUploaded = (urls: string[]) => {
     setFormData({
       ...formData,
-      imageUrl: url,
+      imageUrls: urls,
     })
   }
 
@@ -84,9 +83,10 @@ export default function NewPost() {
         .insert({
           title: formData.title,
           content: formData.content,
-          image_url: formData.imageUrl,
+          image_url: formData.imageUrls[0] || null, // 第一张图片作为封面
+          image_urls: formData.imageUrls.length > 0 ? formData.imageUrls : null, // 所有图片
           user_id: user.id,
-          tag_id: formData.tagId, // 添加标签ID
+          tag_id: formData.tagId,
         })
         .select()
 
@@ -121,7 +121,7 @@ export default function NewPost() {
   }
 
   if (!user) {
-    return null // 将由useEffect处理重定向
+    return null
   }
 
   return (
@@ -210,17 +210,14 @@ export default function NewPost() {
                 </div>
               </div>
 
-              {/* Image Upload */}
+              {/* Multi Image Upload */}
               <div className="space-y-3">
-                <Label className="text-lg font-bold flex items-center gap-2">
-                  <div className="w-2 h-2 bg-black"></div>
-                  图片上传
-                </Label>
                 <div className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white p-4 relative">
-                  <SupabaseImageUpload
-                    onImageUploaded={handleImageUploaded}
-                    existingImageUrl={formData.imageUrl}
+                  <MultiImageUpload
+                    onImagesUploaded={handleImagesUploaded}
+                    existingImageUrls={formData.imageUrls}
                     folderPath="post-images"
+                    maxImages={5}
                   />
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black transform rotate-45"></div>
                 </div>
