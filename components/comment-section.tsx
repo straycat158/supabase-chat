@@ -60,9 +60,26 @@ export function CommentSection({ postId, currentUser }: CommentSectionProps) {
           table: "comments",
           filter: `post_id=eq.${postId}`,
         },
-        (payload) => {
+        async (payload) => {
           if (payload.eventType === "INSERT") {
-            setComments((prev) => [...prev, payload.new])
+            // 获取新评论的完整信息（包括用户资料）
+            const { data: newComment } = await supabase
+              .from("comments")
+              .select(`
+                *,
+                profiles:user_id (id, username, avatar_url)
+              `)
+              .eq("id", payload.new.id)
+              .single()
+
+            if (newComment) {
+              setComments((prev) => {
+                // 检查是否已存在该评论，避免重复添加
+                const exists = prev.some((comment) => comment.id === newComment.id)
+                if (exists) return prev
+                return [...prev, newComment]
+              })
+            }
           } else if (payload.eventType === "DELETE") {
             setComments((prev) => prev.filter((comment) => comment.id !== payload.old.id))
           }
@@ -99,14 +116,24 @@ export function CommentSection({ postId, currentUser }: CommentSectionProps) {
           post_id: postId,
           user_id: currentUser.id,
         })
-        .select()
+        .select(`
+        *,
+        profiles:user_id (id, username, avatar_url)
+      `)
+        .single()
 
       if (error) {
         throw error
       }
 
+      // 立即更新本地评论列表
+      setComments((prev) => [...prev, data])
       setCommentContent("")
-      router.refresh()
+
+      toast({
+        title: "评论成功",
+        description: "您的评论已发布",
+      })
     } catch (error: any) {
       toast({
         title: "评论失败",
@@ -128,7 +155,13 @@ export function CommentSection({ postId, currentUser }: CommentSectionProps) {
         throw error
       }
 
-      router.refresh()
+      // 立即更新本地评论列表
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId))
+
+      toast({
+        title: "删除成功",
+        description: "评论已删除",
+      })
     } catch (error: any) {
       toast({
         title: "删除失败",
