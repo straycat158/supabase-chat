@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { Square } from "lucide-react"
+import { Square, Circle, Triangle } from "lucide-react"
 // 导入头像上传组件
 import { AvatarUpload } from "@/components/avatar-upload"
 import { motion } from "framer-motion"
@@ -82,9 +82,15 @@ export default function SignUp() {
         <div className="absolute bottom-32 left-16 w-20 h-20 bg-black dark:bg-white transform rotate-45 opacity-10"></div>
         <div className="absolute top-1/3 right-1/4 w-12 h-12 bg-black dark:bg-white rounded-full opacity-10"></div>
         <div className="absolute bottom-16 right-16 w-24 h-24 border-4 border-black dark:border-white transform rotate-12 opacity-10"></div>
+        <div className="absolute top-1/4 left-1/4">
+          <Triangle className="h-16 w-16 text-black dark:text-white opacity-5" />
+        </div>
+        <div className="absolute bottom-1/4 right-1/3">
+          <Circle className="h-20 w-20 text-black dark:text-white opacity-5" />
+        </div>
       </div>
 
-      <Card className="w-full max-w-md relative z-10 border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+      <Card className="w-full max-w-md relative z-10 bw-card">
         <CardHeader className="space-y-4 text-center">
           <motion.div
             initial={{ scale: 0 }}
@@ -132,7 +138,7 @@ export default function SignUp() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="border-2 border-black dark:border-white font-medium text-base h-12"
+                className="border-2 border-black dark:border-white font-medium text-base h-12 bg-white dark:bg-black text-black dark:text-white"
               />
             </div>
 
@@ -148,7 +154,7 @@ export default function SignUp() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="border-2 border-black dark:border-white font-medium text-base h-12"
+                className="border-2 border-black dark:border-white font-medium text-base h-12 bg-white dark:bg-black text-black dark:text-white"
               />
             </div>
 
@@ -165,7 +171,7 @@ export default function SignUp() {
                 minLength={6}
                 value={formData.password}
                 onChange={handleChange}
-                className="border-2 border-black dark:border-white font-medium text-base h-12"
+                className="border-2 border-black dark:border-white font-medium text-base h-12 bg-white dark:bg-black text-black dark:text-white"
               />
             </div>
           </CardContent>

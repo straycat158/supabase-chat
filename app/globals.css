@@ -84,15 +84,20 @@ body {
   }
 }
 
-/* 创新的黑白设计元素 */
+/* 创新的黑白设计元素 - 优化暗色模式支持 */
 .bw-gradient {
   background: linear-gradient(135deg, #000000 0%, #333333 50%, #000000 100%);
+}
+
+.dark .bw-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #cccccc 50%, #ffffff 100%);
 }
 
 .bw-card {
   background: linear-gradient(145deg, #ffffff 0%, #f8f8f8 100%);
   border: 2px solid #000000;
   box-shadow: 8px 8px 0px #000000;
+  transition: all 0.3s ease;
 }
 
 .dark .bw-card {
@@ -106,25 +111,27 @@ body {
   color: #ffffff;
   border: 2px solid #000000;
   transition: all 0.3s ease;
+  box-shadow: 4px 4px 0px #000000;
 }
 
 .bw-button:hover {
   background: #ffffff;
   color: #000000;
-  transform: translate(-4px, -4px);
-  box-shadow: 4px 4px 0px #000000;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000;
 }
 
 .dark .bw-button {
   background: #ffffff;
   color: #000000;
   border: 2px solid #ffffff;
+  box-shadow: 4px 4px 0px #ffffff;
 }
 
 .dark .bw-button:hover {
   background: #000000;
   color: #ffffff;
-  box-shadow: 4px 4px 0px #ffffff;
+  box-shadow: 6px 6px 0px #ffffff;
 }
 
 .geometric-pattern {
@@ -149,6 +156,36 @@ body {
 
 .dark .stripe-pattern {
   background: repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);
+}
+
+/* 优化输入框在暗色模式下的显示 */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark textarea {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark textarea:focus {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* 优化选择器和下拉菜单在暗色模式下的显示 */
+.dark select {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* 优化加载动画在暗色模式下的显示 */
+.dark .animate-spin {
+  border-color: #ffffff;
+  border-top-color: transparent;
 }
 
 @layer base {
