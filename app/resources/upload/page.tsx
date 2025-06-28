@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -47,6 +47,7 @@ export default function ResourceUploadPage() {
   const supabase = createClient()
   const { toast } = useToast()
   const { user, isLoading: isAuthLoading } = useAuth()
+  const formRef = useRef<HTMLFormElement>(null)
 
   const [categories, setCategories] = useState<ResourceCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -61,6 +62,108 @@ export default function ResourceUploadPage() {
     downloadLink: "",
     categoryId: "",
   })
+
+  // 防止页面刷新的函数
+  const preventRefresh = useCallback(
+    (e: BeforeUnloadEvent) => {
+      // 如果有未保存的数据，阻止页面刷新
+      if (formData.title || formData.description || formData.downloadLink || coverImages.length > 0) {
+        e.preventDefault()
+        e.returnValue = "您有未保存的数据，确定要离开吗？"
+        return "您有未保存的数据，确定要离开吗？"
+      }
+    },
+    [formData, coverImages],
+  )
+
+  // 防止表单意外提交
+  const preventFormSubmit = useCallback(
+    (e: Event) => {
+      // 检查是否是我们想要的提交
+      if (e.target === formRef.current && !isSubmitting) {
+        return // 允许正常提交
+      }
+
+      // 阻止其他意外的表单提交
+      if (e.target instanceof HTMLFormElement && e.target !== formRef.current) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    },
+    [isSubmitting],
+  )
+
+  // 添加页面刷新保护
+  useEffect(() => {
+    // 监听页面刷新事件
+    window.addEventListener("beforeunload", preventRefresh)
+
+    // 监听表单提交事件
+    document.addEventListener("submit", preventFormSubmit, true)
+
+    // 防止意外的页面导航
+    const handlePopState = (e: PopStateEvent) => {
+      if (formData.title || formData.description || formData.downloadLink || coverImages.length > 0) {
+        const confirmLeave = window.confirm("您有未保存的数据，确定要离开吗？")
+        if (!confirmLeave) {
+          e.preventDefault()
+          window.history.pushState(null, "", window.location.href)
+        }
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("beforeunload", preventRefresh)
+      document.removeEventListener("submit", preventFormSubmit, true)
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [preventRefresh, preventFormSubmit, formData, coverImages])
+
+  // 保存表单状态到 sessionStorage
+  useEffect(() => {
+    const saveFormState = () => {
+      const state = {
+        formData,
+        coverImages,
+        timestamp: Date.now(),
+      }
+      sessionStorage.setItem("resource-upload-state", JSON.stringify(state))
+    }
+
+    // 延迟保存，避免频繁写入
+    const timeoutId = setTimeout(saveFormState, 500)
+    return () => clearTimeout(timeoutId)
+  }, [formData, coverImages])
+
+  // 从 sessionStorage 恢复表单状态
+  useEffect(() => {
+    const restoreFormState = () => {
+      try {
+        const savedState = sessionStorage.getItem("resource-upload-state")
+        if (savedState) {
+          const state = JSON.parse(savedState)
+          // 只恢复30分钟内的状态
+          if (Date.now() - state.timestamp < 30 * 60 * 1000) {
+            setFormData(
+              state.formData || {
+                title: "",
+                description: "",
+                downloadLink: "",
+                categoryId: "",
+              },
+            )
+            setCoverImages(state.coverImages || [])
+          }
+        }
+      } catch (error) {
+        console.error("恢复表单状态失败:", error)
+      }
+    }
+
+    restoreFormState()
+  }, [])
 
   // 检查用户权限
   useEffect(() => {
@@ -204,6 +307,9 @@ export default function ResourceUploadPage() {
         .select()
 
       if (error) throw error
+
+      // 清除保存的状态
+      sessionStorage.removeItem("resource-upload-state")
 
       toast({
         title: "发布成功",
@@ -394,7 +500,7 @@ export default function ResourceUploadPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 {/* 资源分类 */}
                 <div className="space-y-2">
                   <Label className="text-lg font-bold flex items-center gap-2 text-black dark:text-white">

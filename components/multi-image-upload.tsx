@@ -104,6 +104,29 @@ export function MultiImageUpload({
     }
   }, [bucketName, existingImageUrls.length, onImagesUploaded])
 
+  // 防止文件输入触发页面刷新
+  const preventRefresh = useCallback((e: Event) => {
+    e.stopPropagation()
+    e.stopImmediatePropagation()
+  }, [])
+
+  // 添加事件监听器防止刷新
+  useEffect(() => {
+    const fileInput = fileInputRef.current
+    if (fileInput) {
+      // 阻止文件输入相关的所有可能导致刷新的事件
+      fileInput.addEventListener("change", preventRefresh, { capture: true })
+      fileInput.addEventListener("input", preventRefresh, { capture: true })
+      fileInput.addEventListener("click", preventRefresh, { capture: true })
+
+      return () => {
+        fileInput.removeEventListener("change", preventRefresh, { capture: true })
+        fileInput.removeEventListener("input", preventRefresh, { capture: true })
+        fileInput.removeEventListener("click", preventRefresh, { capture: true })
+      }
+    }
+  }, [preventRefresh])
+
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop()
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
@@ -123,12 +146,18 @@ export function MultiImageUpload({
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 阻止默认行为和事件冒泡
+    // 强制阻止默认行为和事件冒泡
     e.preventDefault()
     e.stopPropagation()
+    e.stopImmediatePropagation()
 
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
+
+    // 立即重置文件输入，防止重复触发
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
 
     // 检查存储桶是否准备就绪
     if (!bucketReady) {
@@ -147,10 +176,6 @@ export function MultiImageUpload({
         description: `最多只能上传${maxImages}张图片`,
         variant: "destructive",
       })
-      // 重置文件输入
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
       return
     }
 
@@ -193,10 +218,6 @@ export function MultiImageUpload({
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
-      // 重置文件输入
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
     }
   }
 
@@ -253,9 +274,10 @@ export function MultiImageUpload({
   }
 
   const handleUploadClick = (e: React.MouseEvent) => {
-    // 阻止事件冒泡
+    // 强制阻止事件冒泡
     e.preventDefault()
     e.stopPropagation()
+    e.stopImmediatePropagation()
 
     if (!bucketReady) {
       toast({
@@ -267,7 +289,10 @@ export function MultiImageUpload({
     }
 
     if (fileInputRef.current) {
-      fileInputRef.current.click()
+      // 使用 setTimeout 确保在下一个事件循环中触发
+      setTimeout(() => {
+        fileInputRef.current?.click()
+      }, 0)
     }
   }
 
