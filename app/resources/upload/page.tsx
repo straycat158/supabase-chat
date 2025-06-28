@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,13 +14,22 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth-provider"
 import { MultiImageUpload } from "@/components/multi-image-upload"
 import { motion } from "framer-motion"
-import { Upload, ArrowLeft, LinkIcon } from "lucide-react"
+import { Upload, ArrowLeft, LinkIcon, Package, Palette, Lightbulb, Map, MoreHorizontal } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ResourceCategory } from "@/lib/types/database"
 
+const categoryIcons = {
+  mods: Package,
+  texturepacks: Palette,
+  shaders: Lightbulb,
+  maps: Map,
+  others: MoreHorizontal,
+}
+
 export default function ResourceUploadPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const { toast } = useToast()
   const { user, isLoading: isAuthLoading } = useAuth()
@@ -58,6 +67,18 @@ export default function ResourceUploadPage() {
 
         if (error) throw error
         setCategories(data || [])
+
+        // 如果URL中有category参数，自动选择对应分类
+        const categorySlug = searchParams.get("category")
+        if (categorySlug) {
+          const category = data?.find((cat) => cat.slug === categorySlug)
+          if (category) {
+            setFormData((prev) => ({
+              ...prev,
+              categoryId: category.id,
+            }))
+          }
+        }
       } catch (error: any) {
         toast({
           title: "获取分类失败",
@@ -72,7 +93,7 @@ export default function ResourceUploadPage() {
     if (user) {
       fetchCategories()
     }
-  }, [user, supabase, toast])
+  }, [user, supabase, toast, searchParams])
 
   // 处理表单输入变化
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -135,7 +156,13 @@ export default function ResourceUploadPage() {
         description: "资源已成功发布",
       })
 
-      router.push("/resources")
+      // 跳转到对应分类页面
+      const category = categories.find((cat) => cat.id === formData.categoryId)
+      if (category) {
+        router.push(`/resources/${category.slug}`)
+      } else {
+        router.push("/resources")
+      }
     } catch (error: any) {
       toast({
         title: "发布失败",
@@ -163,6 +190,9 @@ export default function ResourceUploadPage() {
   }
 
   const selectedCategory = categories.find((cat) => cat.id === formData.categoryId)
+  const IconComponent = selectedCategory
+    ? categoryIcons[selectedCategory.slug as keyof typeof categoryIcons] || Upload
+    : Upload
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -178,7 +208,7 @@ export default function ResourceUploadPage() {
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="inline-block">
               <div className="w-16 h-16 bg-black dark:bg-white mx-auto mb-6 flex items-center justify-center">
-                <Upload className="h-8 w-8 text-white dark:text-black" />
+                <IconComponent className="h-8 w-8 text-white dark:text-black" />
               </div>
             </motion.div>
 
@@ -204,7 +234,7 @@ export default function ResourceUploadPage() {
               <Button
                 asChild
                 variant="outline"
-                className="border-2 border-black dark:border-white font-bold bg-transparent"
+                className="border-2 border-black dark:border-white font-bold bg-transparent hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
               >
                 <Link href="/resources">
                   <ArrowLeft className="h-4 w-4 mr-2" />

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { ResourcesPageContent } from "@/components/resources-page-content"
+import { ResourcesMainPage } from "@/components/resources-main-page"
 
 export const revalidate = 0
 
@@ -20,19 +20,20 @@ export default async function ResourcesPage() {
     console.error("Error fetching categories:", categoriesError)
   }
 
-  // 获取所有资源（包含分类和用户信息）
-  const { data: resources, error: resourcesError } = await supabase
-    .from("resources")
-    .select(`
-      *,
-      profiles:user_id (username, avatar_url),
-      resource_categories:category_id (*)
-    `)
-    .order("created_at", { ascending: false })
+  // 获取每个分类的资源数量
+  const categoriesWithCounts = await Promise.all(
+    (categories || []).map(async (category) => {
+      const { count } = await supabase
+        .from("resources")
+        .select("*", { count: "exact", head: true })
+        .eq("category_id", category.id)
 
-  if (resourcesError) {
-    console.error("Error fetching resources:", resourcesError)
-  }
+      return {
+        ...category,
+        resourceCount: count || 0,
+      }
+    }),
+  )
 
-  return <ResourcesPageContent session={session} categories={categories || []} resources={resources || []} />
+  return <ResourcesMainPage session={session} categories={categoriesWithCounts} />
 }
