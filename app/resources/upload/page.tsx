@@ -115,6 +115,7 @@ export default function ResourceUploadPage() {
   // 提交表单
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    e.stopPropagation()
 
     if (!user) {
       toast({

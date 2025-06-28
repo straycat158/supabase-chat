@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,7 @@ export function MultiImageUpload({
   const [isUploading, setIsUploading] = useState(false)
   const [imageUrls, setImageUrls] = useState<string[]>(existingImageUrls)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop()
@@ -51,7 +52,9 @@ export function MultiImageUpload({
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 阻止默认行为和事件冒泡
     e.preventDefault()
+    e.stopPropagation()
 
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
@@ -63,6 +66,10 @@ export function MultiImageUpload({
         description: `最多只能上传${maxImages}张图片`,
         variant: "destructive",
       })
+      // 重置文件输入
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
       return
     }
 
@@ -105,11 +112,19 @@ export function MultiImageUpload({
       setIsUploading(false)
       setUploadProgress(0)
       // 重置文件输入
-      e.target.value = ""
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
-  const handleRemoveImage = async (index: number) => {
+  const handleRemoveImage = async (index: number, e?: React.MouseEvent) => {
+    // 阻止事件冒泡
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     const urlToRemove = imageUrls[index]
 
     try {
@@ -131,7 +146,13 @@ export function MultiImageUpload({
     onImagesUploaded(updatedUrls)
   }
 
-  const moveImage = (fromIndex: number, toIndex: number) => {
+  const moveImage = (fromIndex: number, toIndex: number, e?: React.MouseEvent) => {
+    // 阻止事件冒泡
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     const updatedUrls = [...imageUrls]
     const [movedItem] = updatedUrls.splice(fromIndex, 1)
     updatedUrls.splice(toIndex, 0, movedItem)
@@ -139,10 +160,20 @@ export function MultiImageUpload({
     onImagesUploaded(updatedUrls)
   }
 
+  const handleUploadClick = (e: React.MouseEvent) => {
+    // 阻止事件冒泡
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Label className="text-lg font-bold flex items-center gap-2">
-        <div className="w-2 h-2 bg-black"></div>
+        <div className="w-2 h-2 bg-black dark:bg-white"></div>
         图片上传 ({imageUrls.length}/{maxImages})
       </Label>
 
@@ -157,14 +188,22 @@ export function MultiImageUpload({
               exit={{ opacity: 0, scale: 0.8 }}
               className="relative group"
             >
-              <div className="relative aspect-square overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white">
+              <div className="relative aspect-square overflow-hidden border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white dark:bg-black">
                 <Image src={url || "/placeholder.svg"} alt={`图片 ${index + 1}`} fill className="object-cover" />
                 {index === 0 && (
-                  <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-xs font-bold">封面</div>
+                  <div className="absolute top-2 left-2 bg-black dark:bg-white text-white dark:text-black px-2 py-1 text-xs font-bold">
+                    封面
+                  </div>
                 )}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                   {index > 0 && (
-                    <Button size="sm" variant="secondary" onClick={() => moveImage(index, 0)} className="text-xs">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => moveImage(index, 0, e)}
+                      className="text-xs"
+                      type="button"
+                    >
                       设为封面
                     </Button>
                   )}
@@ -174,7 +213,7 @@ export function MultiImageUpload({
                   variant="destructive"
                   size="icon"
                   className="absolute right-2 top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  onClick={() => handleRemoveImage(index)}
+                  onClick={(e) => handleRemoveImage(index, e)}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -186,30 +225,30 @@ export function MultiImageUpload({
         {/* 上传按钮 */}
         {imageUrls.length < maxImages && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="relative">
-            <div className="aspect-square border-2 border-dashed border-black bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer group">
+            <div
+              className="aspect-square border-2 border-dashed border-black dark:border-white bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer group"
+              onClick={handleUploadClick}
+            >
               {isUploading ? (
                 <div className="flex flex-col items-center justify-center p-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-black mb-2" />
-                  <span className="text-sm text-black font-bold mb-2">上传中... {Math.round(uploadProgress)}%</span>
+                  <Loader2 className="h-8 w-8 animate-spin text-black dark:text-white mb-2" />
+                  <span className="text-sm text-black dark:text-white font-bold mb-2">
+                    上传中... {Math.round(uploadProgress)}%
+                  </span>
                   <Progress value={uploadProgress} className="w-full" />
                 </div>
               ) : (
-                <Label
-                  htmlFor="images"
-                  className="flex flex-col items-center justify-center cursor-pointer w-full h-full"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 border-2 border-black flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors duration-200">
-                      <Plus className="h-6 w-6" />
-                    </div>
-                    <span className="text-sm font-bold text-center">添加图片</span>
-                    <span className="text-xs text-gray-600 text-center">最大5MB</span>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 border-2 border-black dark:border-white flex items-center justify-center group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors duration-200">
+                    <Plus className="h-6 w-6" />
                   </div>
-                </Label>
+                  <span className="text-sm font-bold text-center text-black dark:text-white">添加图片</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 text-center">最大5MB</span>
+                </div>
               )}
             </div>
             <Input
-              id="images"
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               multiple
@@ -222,7 +261,7 @@ export function MultiImageUpload({
       </div>
 
       {imageUrls.length > 0 && (
-        <div className="text-sm text-gray-600 bg-gray-50 border-2 border-black p-3">
+        <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white p-3">
           <div className="flex items-center gap-2 mb-1">
             <ImageIcon className="h-4 w-4" />
             <span className="font-bold">图片说明：</span>
