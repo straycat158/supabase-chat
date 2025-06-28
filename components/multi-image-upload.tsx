@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, X, Plus, ImageIcon } from 'lucide-react'
+import { Loader2, X, Plus, ImageIcon } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -26,7 +26,7 @@ export function MultiImageUpload({
   existingImageUrls = [],
   folderPath = "post-images",
   maxImages = 5,
-  bucketName = "minecraft-forum", // 默认使用旧的存储桶，可以通过props传入新的
+  bucketName = "minecraft-forum",
 }: MultiImageUploadProps) {
   const supabase = createClient()
   const { toast } = useToast()
@@ -37,43 +37,72 @@ export function MultiImageUpload({
   const [isCheckingBucket, setIsCheckingBucket] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 使用 useCallback 来稳定函数引用，防止不必要的重新渲染
+  const checkBucket = useCallback(async () => {
+    setIsCheckingBucket(true)
+    try {
+      // 尝试列出存储桶中的文件来检查存储桶是否存在
+      const { data, error } = await supabase.storage.from(bucketName).list("", {
+        limit: 1,
+      })
+
+      if (error) {
+        console.error(`存储桶 ${bucketName} 不存在或无法访问:`, error)
+        setBucketReady(false)
+      } else {
+        console.log(`存储桶 ${bucketName} 可用`)
+        setBucketReady(true)
+      }
+    } catch (error: any) {
+      console.error("检查存储桶失败:", error)
+      setBucketReady(false)
+    } finally {
+      setIsCheckingBucket(false)
+    }
+  }, [supabase, bucketName])
+
   // 检查存储桶是否存在
   useEffect(() => {
-    const checkBucket = async () => {
-      setIsCheckingBucket(true)
-      try {
-        // 尝试列出存储桶中的文件来检查存储桶是否存在
-        const { data, error } = await supabase.storage.from(bucketName).list("", {
-          limit: 1,
-        })
+    checkBucket()
+  }, [checkBucket])
 
-        if (error) {
-          console.error(`存储桶 ${bucketName} 不存在或无法访问:`, error)
-          toast({
-            title: "存储桶不存在",
-            description: `存储桶 ${bucketName} 不存在，请先创建存储桶`,
-            variant: "destructive",
-          })
-          setBucketReady(false)
-        } else {
-          console.log(`存储桶 ${bucketName} 可用`)
-          setBucketReady(true)
-        }
-      } catch (error: any) {
-        console.error("检查存储桶失败:", error)
-        toast({
-          title: "存储检查失败",
-          description: "无法检查存储桶状态，请刷新页面重试",
-          variant: "destructive",
-        })
-        setBucketReady(false)
-      } finally {
-        setIsCheckingBucket(false)
+  // 监听页面可见性变化，防止切换标签页时状态丢失
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // 页面重新可见时，重新检查存储桶状态
+        checkBucket()
       }
     }
 
-    checkBucket()
-  }, [supabase, toast, bucketName])
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [checkBucket])
+
+  // 保存状态到 sessionStorage，防止页面刷新时丢失
+  useEffect(() => {
+    if (imageUrls.length > 0) {
+      sessionStorage.setItem(`upload-images-${bucketName}`, JSON.stringify(imageUrls))
+    }
+  }, [imageUrls, bucketName])
+
+  // 从 sessionStorage 恢复状态
+  useEffect(() => {
+    const savedImages = sessionStorage.getItem(`upload-images-${bucketName}`)
+    if (savedImages && existingImageUrls.length === 0) {
+      try {
+        const parsedImages = JSON.parse(savedImages)
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          setImageUrls(parsedImages)
+          onImagesUploaded(parsedImages)
+        }
+      } catch (error) {
+        console.error("恢复图片状态失败:", error)
+      }
+    }
+  }, [bucketName, existingImageUrls.length, onImagesUploaded])
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop()
@@ -197,6 +226,13 @@ export function MultiImageUpload({
     const updatedUrls = imageUrls.filter((_, i) => i !== index)
     setImageUrls(updatedUrls)
     onImagesUploaded(updatedUrls)
+
+    // 更新 sessionStorage
+    if (updatedUrls.length > 0) {
+      sessionStorage.setItem(`upload-images-${bucketName}`, JSON.stringify(updatedUrls))
+    } else {
+      sessionStorage.removeItem(`upload-images-${bucketName}`)
+    }
   }
 
   const moveImage = (fromIndex: number, toIndex: number, e?: React.MouseEvent) => {
@@ -211,6 +247,9 @@ export function MultiImageUpload({
     updatedUrls.splice(toIndex, 0, movedItem)
     setImageUrls(updatedUrls)
     onImagesUploaded(updatedUrls)
+
+    // 更新 sessionStorage
+    sessionStorage.setItem(`upload-images-${bucketName}`, JSON.stringify(updatedUrls))
   }
 
   const handleUploadClick = (e: React.MouseEvent) => {
@@ -232,6 +271,21 @@ export function MultiImageUpload({
     }
   }
 
+  // 清理 sessionStorage
+  const clearSavedImages = () => {
+    sessionStorage.removeItem(`upload-images-${bucketName}`)
+  }
+
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      // 如果没有图片，清理 sessionStorage
+      if (imageUrls.length === 0) {
+        clearSavedImages()
+      }
+    }
+  }, [imageUrls.length, bucketName])
+
   return (
     <div className="space-y-4">
       <Label className="text-lg font-bold flex items-center gap-2">
@@ -243,11 +297,7 @@ export function MultiImageUpload({
             检查存储桶...
           </div>
         )}
-        {!bucketReady && !isCheckingBucket && (
-          <div className="ml-2 text-sm text-red-500">
-            存储桶不可用
-          </div>
-        )}
+        {!bucketReady && !isCheckingBucket && <div className="ml-2 text-sm text-red-500">存储桶不可用</div>}
       </Label>
 
       {/* 存储桶信息 */}
@@ -359,6 +409,7 @@ export function MultiImageUpload({
             <li>第一张图片将作为帖子封面显示</li>
             <li>点击"设为封面"可以更改封面图片</li>
             <li>在帖子详情页可以查看所有图片</li>
+            <li>图片会自动保存，切换标签页不会丢失</li>
           </ul>
         </div>
       )}
