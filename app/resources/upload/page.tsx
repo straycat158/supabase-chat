@@ -14,7 +14,18 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth-provider"
 import { MultiImageUpload } from "@/components/multi-image-upload"
 import { motion } from "framer-motion"
-import { Upload, ArrowLeft, LinkIcon, Package, Palette, Lightbulb, Map, MoreHorizontal } from "lucide-react"
+import {
+  Upload,
+  ArrowLeft,
+  LinkIcon,
+  Package,
+  Palette,
+  Lightbulb,
+  Map,
+  MoreHorizontal,
+  AlertCircle,
+  Database,
+} from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ResourceCategory } from "@/lib/types/database"
@@ -27,6 +38,9 @@ const categoryIcons = {
   others: MoreHorizontal,
 }
 
+// 默认使用新的存储桶名称，你可以根据需要修改
+const STORAGE_BUCKET_NAME = "minecraft-resources-images"
+
 export default function ResourceUploadPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -38,6 +52,8 @@ export default function ResourceUploadPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [coverImages, setCoverImages] = useState<string[]>([])
+  const [storageReady, setStorageReady] = useState(false)
+  const [checkingStorage, setCheckingStorage] = useState(true)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -57,6 +73,34 @@ export default function ResourceUploadPage() {
       router.push("/login")
     }
   }, [user, isAuthLoading, router, toast])
+
+  // 检查存储桶状态
+  useEffect(() => {
+    const checkStorage = async () => {
+      setCheckingStorage(true)
+      try {
+        // 尝试列出存储桶中的文件来检查存储桶是否存在
+        const { data, error } = await supabase.storage.from(STORAGE_BUCKET_NAME).list("", {
+          limit: 1,
+        })
+
+        if (error) {
+          console.error(`存储桶 ${STORAGE_BUCKET_NAME} 不存在或无法访问:`, error)
+          setStorageReady(false)
+        } else {
+          console.log(`存储桶 ${STORAGE_BUCKET_NAME} 可用`)
+          setStorageReady(true)
+        }
+      } catch (error: any) {
+        console.error("检查存储桶失败:", error)
+        setStorageReady(false)
+      } finally {
+        setCheckingStorage(false)
+      }
+    }
+
+    checkStorage()
+  }, [supabase])
 
   // 获取资源分类
   useEffect(() => {
@@ -135,6 +179,15 @@ export default function ResourceUploadPage() {
       return
     }
 
+    if (!storageReady) {
+      toast({
+        title: "存储不可用",
+        description: "图片存储不可用，请检查存储桶配置",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -172,6 +225,33 @@ export default function ResourceUploadPage() {
       })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // 创建存储桶
+  const createStorageBucket = async () => {
+    try {
+      const response = await fetch("/api/storage/create-new", {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast({
+          title: "存储桶创建成功",
+          description: `新存储桶 ${data.bucketName} 已创建`,
+        })
+        // 重新检查存储状态
+        window.location.reload()
+      } else {
+        throw new Error(data.error)
+      }
+    } catch (error: any) {
+      toast({
+        title: "创建存储桶失败",
+        description: error.message,
+        variant: "destructive",
+      })
     }
   }
 
@@ -254,6 +334,58 @@ export default function ResourceUploadPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
+          {/* 存储状态检查 */}
+          {checkingStorage && (
+            <Card className="bw-card bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 mb-6">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent animate-spin"></div>
+                  <span className="text-blue-800 dark:text-blue-200 font-bold">检查存储桶状态...</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 存储不可用警告 */}
+          {!checkingStorage && !storageReady && (
+            <Card className="bw-card bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 mb-6">
+              <CardHeader>
+                <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  存储桶不可用
+                </CardTitle>
+                <CardDescription className="text-red-700 dark:text-red-300">
+                  存储桶 <code className="bg-red-100 dark:bg-red-900 px-2 py-1 rounded">{STORAGE_BUCKET_NAME}</code>{" "}
+                  不存在或无法访问
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-sm text-red-700 dark:text-red-300">
+                    <p className="font-bold mb-2">解决方案:</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>点击下方按钮创建新的存储桶</li>
+                      <li>
+                        或者访问{" "}
+                        <Link href="/admin/storage/new" className="underline font-bold">
+                          存储管理页面
+                        </Link>
+                      </li>
+                      <li>或者联系管理员配置存储桶</li>
+                    </ol>
+                  </div>
+                  <Button
+                    onClick={createStorageBucket}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold"
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    创建新存储桶
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="bw-card bg-white dark:bg-black">
             <CardHeader>
               <CardTitle className="text-2xl font-black text-black dark:text-white">发布新资源</CardTitle>
@@ -303,13 +435,14 @@ export default function ResourceUploadPage() {
                   />
                 </div>
 
-                {/* 封面图片 - 使用帖子上传的图片组件 */}
+                {/* 封面图片 */}
                 <div className="space-y-2">
                   <MultiImageUpload
                     onImagesUploaded={setCoverImages}
                     existingImageUrls={coverImages}
                     folderPath="resource-covers"
                     maxImages={5}
+                    bucketName={STORAGE_BUCKET_NAME}
                   />
                 </div>
 
@@ -362,11 +495,20 @@ export default function ResourceUploadPage() {
 
                 {/* 提交按钮 */}
                 <div className="pt-6 border-t-2 border-black dark:border-white">
-                  <Button type="submit" disabled={isSubmitting} className="w-full bw-button font-bold text-lg py-6">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !storageReady}
+                    className="w-full bw-button font-bold text-lg py-6"
+                  >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin"></div>
                         发布中...
+                      </div>
+                    ) : !storageReady ? (
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" />
+                        存储不可用
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
