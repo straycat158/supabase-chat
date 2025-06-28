@@ -1,78 +1,59 @@
 import { createClient } from "@supabase/supabase-js"
 
-// 这个脚本用于初始化Supabase Storage
-// 你可以在本地运行这个脚本来创建必要的存储桶
-export async function setupStorage() {
+export async function ensureStorageBucket() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing Supabase credentials")
-    return
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("缺少Supabase环境变量")
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-  // 创建minecraft-forum存储桶
-  const { data: bucketData, error: bucketError } = await supabase.storage.createBucket("minecraft-forum", {
-    public: true,
-    fileSizeLimit: 5242880, // 5MB
-  })
+  try {
+    // 检查存储桶是否存在
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
 
-  if (bucketError) {
-    if (bucketError.message.includes("already exists")) {
-      console.log("Storage bucket already exists")
-    } else {
-      console.error("Error creating storage bucket:", bucketError)
+    if (listError) {
+      // 如果是权限错误，说明存储桶可能存在但用户没有列出权限
+      if (listError.message.includes("permission") || listError.message.includes("unauthorized")) {
+        // 尝试直接上传一个测试文件来验证存储桶是否存在
+        const testFile = new Blob(["test"], { type: "text/plain" })
+        const { error: testError } = await supabase.storage.from("minecraft-forum").upload("test/test.txt", testFile)
+
+        if (!testError || testError.message.includes("already exists")) {
+          // 存储桶存在，删除测试文件
+          await supabase.storage.from("minecraft-forum").remove(["test/test.txt"])
+          return true
+        }
+      }
+      throw listError
     }
-  } else {
-    console.log("Storage bucket created successfully:", bucketData)
-  }
 
-  // 创建avatars存储桶
-  const { data: avatarsBucketData, error: avatarsBucketError } = await supabase.storage.createBucket("avatars", {
-    public: true,
-    fileSizeLimit: 2097152, // 2MB
-  })
-
-  if (avatarsBucketError) {
-    if (avatarsBucketError.message.includes("already exists")) {
-      console.log("Avatars storage bucket already exists")
-    } else {
-      console.error("Error creating avatars storage bucket:", avatarsBucketError)
-    }
-  } else {
-    console.log("Avatars storage bucket created successfully:", avatarsBucketData)
-  }
-
-  // 设置avatars存储桶策略
-  const { error: avatarsPolicyError } = await supabase.storage.updateBucket("avatars", {
-    public: true,
-    fileSizeLimit: 2097152, // 2MB
-  })
-
-  if (avatarsPolicyError) {
-    console.error("Error updating avatars bucket policy:", avatarsPolicyError)
-  } else {
-    console.log("Avatars bucket policy updated successfully")
-  }
-
-  // 设置存储桶策略
-  const { error: policyError } = await supabase.storage.updateBucket("minecraft-forum", {
-    public: true,
-    fileSizeLimit: 5242880, // 5MB
-  })
-
-  if (policyError) {
-    console.error("Error updating bucket policy:", policyError)
-  } else {
-    console.log("Bucket policy updated successfully")
+    const bucketExists = buckets?.some((bucket) => bucket.name === "minecraft-forum")
+    return bucketExists
+  } catch (error: any) {
+    console.error("检查存储桶失败:", error)
+    throw error
   }
 }
 
-// 如果直接运行此文件，则执行设置
-if (require.main === module) {
-  setupStorage()
-    .then(() => console.log("Storage setup complete"))
-    .catch((err) => console.error("Storage setup failed:", err))
+export async function createStorageBucket() {
+  // 这个函数需要服务端权限，通过API路由调用
+  try {
+    const response = await fetch("/api/storage/check", {
+      method: "POST",
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || "创建存储桶失败")
+    }
+
+    return result.bucketExists
+  } catch (error: any) {
+    console.error("创建存储桶失败:", error)
+    throw error
+  }
 }
