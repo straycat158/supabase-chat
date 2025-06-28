@@ -35,7 +35,7 @@ export interface Database {
           created_at: string
           updated_at: string
           image_url?: string | null
-          image_urls?: string[] | null // 新增：多张图片URL数组
+          image_urls?: string[] | null
           tag_id?: string | null
         }
         Insert: {
@@ -46,7 +46,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           image_url?: string | null
-          image_urls?: string[] | null // 新增：多张图片URL数组
+          image_urls?: string[] | null
           tag_id?: string | null
         }
         Update: {
@@ -57,7 +57,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           image_url?: string | null
-          image_urls?: string[] | null // 新增：多张图片URL数组
+          image_urls?: string[] | null
           tag_id?: string | null
         }
       }
@@ -151,6 +151,64 @@ export interface Database {
           created_at?: string
         }
       }
+      resource_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          created_at?: string
+        }
+      }
+      resources: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          download_link: string
+          cover_images: string[]
+          category_id: string
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          download_link: string
+          cover_images?: string[]
+          category_id: string
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          download_link?: string
+          cover_images?: string[]
+          category_id?: string
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
@@ -160,3 +218,5 @@ export type Post = Database["public"]["Tables"]["posts"]["Row"]
 export type Comment = Database["public"]["Tables"]["comments"]["Row"]
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 export type Tag = Database["public"]["Tables"]["tags"]["Row"]
+export type ResourceCategory = Database["public"]["Tables"]["resource_categories"]["Row"]
+export type Resource = Database["public"]["Tables"]["resources"]["Row"]

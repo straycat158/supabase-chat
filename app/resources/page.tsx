@@ -10,27 +10,29 @@ export default async function ResourcesPage() {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // 获取所有标签
-  const { data: tags, error: tagsError } = await supabase.from("tags").select("*").order("name")
+  // 获取所有资源分类
+  const { data: categories, error: categoriesError } = await supabase
+    .from("resource_categories")
+    .select("*")
+    .order("name")
 
-  if (tagsError) {
-    console.error("Error fetching tags:", tagsError)
+  if (categoriesError) {
+    console.error("Error fetching categories:", categoriesError)
   }
 
-  // 获取所有帖子（包含标签信息）
-  const { data: posts, error: postsError } = await supabase
-    .from("posts")
+  // 获取所有资源（包含分类和用户信息）
+  const { data: resources, error: resourcesError } = await supabase
+    .from("resources")
     .select(`
       *,
       profiles:user_id (username, avatar_url),
-      comments:comments (id),
-      tags:tag_id (*)
+      resource_categories:category_id (*)
     `)
     .order("created_at", { ascending: false })
 
-  if (postsError) {
-    console.error("Error fetching posts:", postsError)
+  if (resourcesError) {
+    console.error("Error fetching resources:", resourcesError)
   }
 
-  return <ResourcesPageContent session={session} tags={tags || []} posts={posts || []} />
+  return <ResourcesPageContent session={session} categories={categories || []} resources={resources || []} />
 }
