@@ -25,22 +25,29 @@ export default async function CategoryPage({ params }: Props) {
     .single()
 
   if (categoryError || !category) {
+    console.error("Category error:", categoryError)
     notFound()
   }
 
-  // 获取该分类下的所有资源
-  const { data: resources, error: resourcesError } = await supabase
+  // 获取该分类下的所有资源，包含用户信息
+  const { data: resourcesData, error: resourcesError } = await supabase
     .from("resources")
     .select(`
       *,
-      profiles:user_id (username, avatar_url)
+      profiles!inner(username, avatar_url)
     `)
     .eq("category_id", category.id)
     .order("created_at", { ascending: false })
 
   if (resourcesError) {
-    console.error("Error fetching resources:", resourcesError)
+    console.error("Resources error:", resourcesError)
   }
 
-  return <ResourceCategoryPage session={session} category={category} resources={resources || []} />
+  // 格式化资源数据
+  const resources = (resourcesData || []).map((resource) => ({
+    ...resource,
+    user: resource.profiles,
+  }))
+
+  return <ResourceCategoryPage session={session} category={category} resources={resources} />
 }

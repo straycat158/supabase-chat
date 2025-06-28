@@ -138,15 +138,14 @@ export function ResourcesMainPage({ session, categories }: ResourcesMainPageProp
 
                     {/* 查看详情按钮 */}
                     <div className="pt-6 border-t-2 border-black dark:border-white">
-                      <Button
-                        asChild
-                        className="w-full bw-button font-bold text-lg py-4 group-hover:scale-105 transition-transform duration-300"
-                      >
-                        <Link href={`/resources/${category.slug}`} className="flex items-center justify-center gap-2">
-                          查看详情
-                          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Link>
-                      </Button>
+                      <Link href={`/resources/${category.slug}`} className="block">
+                        <Button className="w-full bw-button font-bold text-lg py-4 group-hover:scale-105 transition-transform duration-300">
+                          <span className="flex items-center justify-center gap-2">
+                            查看详情
+                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+                          </span>
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>

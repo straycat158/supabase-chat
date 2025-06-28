@@ -1,19 +1,28 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, Download, Calendar, Plus, Package, Palette, Lightbulb, Map, MoreHorizontal } from "lucide-react"
+import {
+  ArrowLeft,
+  Download,
+  User,
+  Calendar,
+  Plus,
+  Package,
+  Palette,
+  Lightbulb,
+  Map,
+  MoreHorizontal,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { formatDistanceToNow } from "date-fns"
-import { zhCN } from "date-fns/locale"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import Image from "next/image"
-import type { ResourceCategory } from "@/lib/types/database"
+import type { ResourceCategory, Resource } from "@/lib/types/database"
 
 interface ResourceCategoryPageProps {
   session: any
   category: ResourceCategory
-  resources: any[]
+  resources: (Resource & { user: { username: string; avatar_url: string | null } })[]
 }
 
 const categoryIcons = {
@@ -27,41 +36,46 @@ const categoryIcons = {
 export function ResourceCategoryPage({ session, category, resources }: ResourceCategoryPageProps) {
   const IconComponent = categoryIcons[category.slug as keyof typeof categoryIcons] || Package
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* 页面头部 */}
       <div className="relative overflow-hidden bg-white dark:bg-black border-b-4 border-black dark:border-white">
         {/* 几何背景 */}
         <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-20 h-20 border-4 border-black dark:border-white transform rotate-12 opacity-20"></div>
-          <div className="absolute top-0 right-0 w-40 h-40 bg-black dark:bg-white transform -translate-y-20 translate-x-20 opacity-10"></div>
-          <div className="absolute bottom-0 left-1/3 w-12 h-12 bg-black dark:bg-white rounded-full opacity-20"></div>
+          <div className="absolute top-10 right-10 w-16 h-16 border-4 border-black dark:border-white transform -rotate-12 opacity-20"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-black dark:bg-white transform -translate-x-16 translate-y-16 opacity-10"></div>
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-12">
-          <div className="max-w-4xl mx-auto space-y-8">
+          <div className="max-w-4xl mx-auto">
             {/* 返回按钮 */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <Button
-                asChild
-                variant="outline"
-                className="border-2 border-black dark:border-white font-bold bg-transparent hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-              >
-                <Link href="/resources">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
+              <Link href="/resources">
+                <Button
+                  variant="outline"
+                  className="border-2 border-black dark:border-white font-bold bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   返回资源中心
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </motion.div>
 
-            {/* 分类信息 */}
             <div className="text-center space-y-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="inline-block"
               >
-                <div className="w-20 h-20 bg-black dark:bg-white mx-auto mb-6 flex items-center justify-center transform rotate-3">
+                <div className="w-20 h-20 bg-black dark:bg-white mx-auto mb-6 flex items-center justify-center">
                   <IconComponent className="h-10 w-10 text-white dark:text-black" />
                 </div>
               </motion.div>
@@ -88,20 +102,19 @@ export function ResourceCategoryPage({ session, category, resources }: ResourceC
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center justify-center gap-6"
+                className="flex justify-center gap-4"
               >
                 <div className="text-center">
                   <div className="text-3xl font-black text-black dark:text-white">{resources.length}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 font-bold">个资源</div>
                 </div>
-
                 {session && (
-                  <Button asChild className="bw-button font-bold">
-                    <Link href={`/resources/upload?category=${category.slug}`}>
+                  <Link href={`/resources/upload?category=${category.slug}`}>
+                    <Button className="bw-button font-bold">
                       <Plus className="h-4 w-4 mr-2" />
                       发布{category.name}
-                    </Link>
-                  </Button>
+                    </Button>
+                  </Link>
                 )}
               </motion.div>
             </div>
@@ -109,7 +122,7 @@ export function ResourceCategoryPage({ session, category, resources }: ResourceC
         </div>
       </div>
 
-      {/* 资源展示区域 */}
+      {/* 资源列表 */}
       <div className="container mx-auto px-4 py-12">
         {resources.length > 0 ? (
           <motion.div
@@ -121,82 +134,66 @@ export function ResourceCategoryPage({ session, category, resources }: ResourceC
             {resources.map((resource, index) => (
               <motion.div
                 key={resource.id}
-                className="bw-card p-6 group hover:scale-105 transition-transform cursor-pointer bg-white dark:bg-black"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                whileHover={{ y: -5 }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                whileHover={{ y: -4 }}
               >
-                <div className="space-y-4">
+                <Card className="bw-card h-full bg-white dark:bg-black group hover:shadow-xl transition-all duration-300">
                   {/* 封面图片 */}
                   {resource.cover_images && resource.cover_images.length > 0 && (
-                    <div className="relative aspect-video w-full overflow-hidden border-2 border-black dark:border-white">
+                    <div className="aspect-video border-b-2 border-black dark:border-white overflow-hidden">
                       <Image
                         src={resource.cover_images[0] || "/placeholder.svg"}
                         alt={resource.title}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        width={400}
+                        height={225}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = "none"
+                        }}
                       />
-                      {resource.cover_images.length > 1 && (
-                        <div className="absolute top-2 right-2 bg-black dark:bg-white text-white dark:text-black px-2 py-1 text-xs font-bold">
-                          +{resource.cover_images.length - 1}
-                        </div>
-                      )}
                     </div>
                   )}
 
-                  {/* 标题和描述 */}
-                  <div>
-                    <h3 className="text-xl font-black text-black dark:text-white mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors line-clamp-2">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl font-black text-black dark:text-white line-clamp-2">
                       {resource.title}
-                    </h3>
+                    </CardTitle>
                     {resource.description && (
-                      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed line-clamp-3">
+                      <CardDescription className="text-gray-600 dark:text-gray-400 line-clamp-3">
                         {resource.description}
-                      </p>
+                      </CardDescription>
                     )}
-                  </div>
+                  </CardHeader>
 
-                  {/* 用户信息和时间 */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <Avatar className="h-8 w-8 border-2 border-black dark:border-white">
-                      <AvatarImage
-                        src={resource.profiles?.avatar_url || ""}
-                        alt={resource.profiles?.username || "用户"}
-                      />
-                      <AvatarFallback className="text-xs bg-black dark:bg-white text-white dark:text-black font-bold">
-                        {(resource.profiles?.username || "U").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col flex-1">
-                      <span className="text-xs font-bold text-black dark:text-white">
-                        {resource.profiles?.username}
-                      </span>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                        <Calendar className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(resource.created_at), {
-                          addSuffix: true,
-                          locale: zhCN,
-                        })}
+                  <CardContent className="space-y-4">
+                    {/* 用户信息 */}
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 bg-black dark:bg-white flex items-center justify-center">
+                        <User className="h-4 w-4 text-white dark:text-black" />
                       </div>
+                      <span className="font-bold text-black dark:text-white">{resource.user.username}</span>
                     </div>
-                  </div>
 
-                  {/* 下载按钮 */}
-                  <div className="pt-4 border-t-2 border-black dark:border-white">
-                    <Button asChild className="w-full bw-button font-bold text-sm">
-                      <a
-                        href={resource.download_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        下载资源
-                      </a>
-                    </Button>
-                  </div>
-                </div>
+                    {/* 发布时间 */}
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(resource.created_at)}</span>
+                    </div>
+
+                    {/* 下载按钮 */}
+                    <div className="pt-4 border-t-2 border-black dark:border-white">
+                      <Button asChild className="w-full bw-button font-bold">
+                        <a href={resource.download_link} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-2" />
+                          立即下载
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </motion.div>
@@ -213,15 +210,15 @@ export function ResourceCategoryPage({ session, category, resources }: ResourceC
               </div>
               <h3 className="text-2xl font-black mb-4 text-black dark:text-white">暂无{category.name}资源</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
-                该分类下还没有任何资源，快来发布第一个吧！
+                还没有人发布{category.name}资源，成为第一个分享者吧！
               </p>
               {session && (
-                <Button asChild className="bw-button font-bold">
-                  <Link href={`/resources/upload?category=${category.slug}`}>
+                <Link href={`/resources/upload?category=${category.slug}`}>
+                  <Button className="bw-button font-bold">
                     <Plus className="h-4 w-4 mr-2" />
                     发布{category.name}
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               )}
             </div>
           </motion.div>
