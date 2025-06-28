@@ -231,16 +231,15 @@ export default function ResourceUploadPage() {
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <Button
-                asChild
-                variant="outline"
-                className="border-2 border-black dark:border-white font-bold bg-transparent hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-              >
-                <Link href="/resources">
+              <Link href="/resources">
+                <Button
+                  variant="outline"
+                  className="border-2 border-black dark:border-white font-bold bg-transparent hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   返回资源中心
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -303,7 +302,7 @@ export default function ResourceUploadPage() {
                   />
                 </div>
 
-                {/* 封面图片 */}
+                {/* 封面图片 - 使用帖子上传的图片组件 */}
                 <div className="space-y-2">
                   <MultiImageUpload
                     onImagesUploaded={setCoverImages}

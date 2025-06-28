@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS resource_categories (
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   description TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  icon TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 创建资源表
@@ -13,43 +14,49 @@ CREATE TABLE IF NOT EXISTS resources (
   title TEXT NOT NULL,
   description TEXT,
   download_link TEXT NOT NULL,
-  cover_images TEXT[] DEFAULT '{}',
-  category_id UUID REFERENCES resource_categories(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  cover_images TEXT[],
+  category_id UUID NOT NULL REFERENCES resource_categories(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  downloads INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_resources_category_id ON resources(category_id);
+CREATE INDEX IF NOT EXISTS idx_resources_user_id ON resources(user_id);
+CREATE INDEX IF NOT EXISTS idx_resources_created_at ON resources(created_at DESC);
+
 -- 插入默认分类
-INSERT INTO resource_categories (name, slug, description) VALUES
-  ('模组', 'mods', '各种功能强大的Minecraft模组，为游戏添加新的内容和机制'),
-  ('材质包', 'texturepacks', '高质量的材质包资源，提升游戏的视觉体验'),
-  ('光影', 'shaders', '光影包和渲染效果，让你的Minecraft世界更加真实'),
-  ('地图', 'maps', '精心制作的自定义地图和存档，探索全新的世界'),
-  ('其他', 'others', '其他类型的Minecraft资源和工具')
+INSERT INTO resource_categories (name, slug, description, icon) VALUES
+  ('模组', 'mods', '各种Minecraft模组，增加新的游戏内容和功能', 'Package'),
+  ('材质包', 'texturepacks', '改变游戏视觉效果的材质包', 'Palette'),
+  ('光影包', 'shaders', '提升游戏画面效果的光影包', 'Lightbulb'),
+  ('地图', 'maps', '各种类型的Minecraft地图', 'Map'),
+  ('其他', 'others', '其他类型的Minecraft资源', 'MoreHorizontal')
 ON CONFLICT (slug) DO NOTHING;
 
 -- 启用RLS
 ALTER TABLE resource_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resources ENABLE ROW LEVEL SECURITY;
 
--- 资源分类的RLS策略
-CREATE POLICY "Anyone can view resource categories" ON resource_categories FOR SELECT USING (true);
+-- 创建RLS策略
+-- 资源分类：所有人可读
+CREATE POLICY "Resource categories are viewable by everyone" ON resource_categories
+  FOR SELECT USING (true);
 
--- 资源的RLS策略
-CREATE POLICY "Anyone can view resources" ON resources FOR SELECT USING (true);
-CREATE POLICY "Users can insert their own resources" ON resources FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own resources" ON resources FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own resources" ON resources FOR DELETE USING (auth.uid() = user_id);
+-- 资源：所有人可读
+CREATE POLICY "Resources are viewable by everyone" ON resources
+  FOR SELECT USING (true);
 
--- 创建更新时间触发器
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- 资源：认证用户可创建
+CREATE POLICY "Users can create resources" ON resources
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = user_id);
 
-CREATE TRIGGER update_resources_updated_at BEFORE UPDATE ON resources
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- 资源：用户可更新自己的资源
+CREATE POLICY "Users can update own resources" ON resources
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- 资源：用户可删除自己的资源
+CREATE POLICY "Users can delete own resources" ON resources
+  FOR DELETE USING (auth.uid() = user_id);

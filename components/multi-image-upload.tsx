@@ -2,13 +2,16 @@
 
 import type React from "react"
 
-import { useState, useCallback } from "react"
+import { useState } from "react"
+import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { Upload, X, ImageIcon } from "lucide-react"
-import Image from "next/image"
+import { Loader2, X, Plus, ImageIcon } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface MultiImageUploadProps {
   onImagesUploaded: (urls: string[]) => void
@@ -20,175 +23,215 @@ interface MultiImageUploadProps {
 export function MultiImageUpload({
   onImagesUploaded,
   existingImageUrls = [],
-  folderPath = "uploads",
+  folderPath = "post-images",
   maxImages = 5,
 }: MultiImageUploadProps) {
-  const [uploading, setUploading] = useState(false)
-  const [imageUrls, setImageUrls] = useState<string[]>(existingImageUrls)
-  const { toast } = useToast()
   const supabase = createClient()
+  const { toast } = useToast()
+  const [isUploading, setIsUploading] = useState(false)
+  const [imageUrls, setImageUrls] = useState<string[]>(existingImageUrls)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
-  const uploadImages = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      event.preventDefault()
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop()
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+    const filePath = `${folderPath}/${fileName}`
 
-      try {
-        setUploading(true)
+    const { data, error } = await supabase.storage.from("minecraft-forum").upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    })
 
-        if (!event.target.files || event.target.files.length === 0) {
-          return
+    if (error) {
+      throw error
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("minecraft-forum").getPublicUrl(filePath)
+    return publicUrlData.publicUrl
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault()
+
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    // 检查图片数量限制
+    if (imageUrls.length + files.length > maxImages) {
+      toast({
+        title: "图片数量超限",
+        description: `最多只能上传${maxImages}张图片`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const uploadPromises = files.map(async (file, index) => {
+        // 检查文件类型
+        if (!file.type.startsWith("image/")) {
+          throw new Error(`文件 ${file.name} 不是图片格式`)
         }
 
-        const files = Array.from(event.target.files)
-
-        // 检查是否超过最大图片数量
-        if (imageUrls.length + files.length > maxImages) {
-          toast({
-            title: "图片数量超限",
-            description: `最多只能上传 ${maxImages} 张图片`,
-            variant: "destructive",
-          })
-          return
+        // 检查文件大小 (限制为5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error(`文件 ${file.name} 大小超过5MB`)
         }
 
-        const uploadPromises = files.map(async (file) => {
-          const fileExt = file.name.split(".").pop()
-          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-          const filePath = `${folderPath}/${fileName}`
+        const url = await uploadImage(file)
+        setUploadProgress(((index + 1) / files.length) * 100)
+        return url
+      })
 
-          const { error: uploadError } = await supabase.storage.from("images").upload(filePath, file)
-
-          if (uploadError) {
-            throw uploadError
-          }
-
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("images").getPublicUrl(filePath)
-
-          return publicUrl
-        })
-
-        const newUrls = await Promise.all(uploadPromises)
-        const updatedUrls = [...imageUrls, ...newUrls]
-
-        setImageUrls(updatedUrls)
-        onImagesUploaded(updatedUrls)
-
-        toast({
-          title: "上传成功",
-          description: `成功上传 ${files.length} 张图片`,
-        })
-      } catch (error: any) {
-        console.error("Error uploading images:", error)
-        toast({
-          title: "上传失败",
-          description: error.message || "图片上传失败，请重试",
-          variant: "destructive",
-        })
-      } finally {
-        setUploading(false)
-        // 重置文件输入
-        if (event.target) {
-          event.target.value = ""
-        }
-      }
-    },
-    [imageUrls, maxImages, folderPath, onImagesUploaded, supabase, toast],
-  )
-
-  const removeImage = useCallback(
-    (indexToRemove: number) => {
-      const updatedUrls = imageUrls.filter((_, index) => index !== indexToRemove)
+      const newUrls = await Promise.all(uploadPromises)
+      const updatedUrls = [...imageUrls, ...newUrls]
       setImageUrls(updatedUrls)
       onImagesUploaded(updatedUrls)
-    },
-    [imageUrls, onImagesUploaded],
-  )
+
+      toast({
+        title: "上传成功",
+        description: `成功上传${files.length}张图片`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "上传失败",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+      // 重置文件输入
+      e.target.value = ""
+    }
+  }
+
+  const handleRemoveImage = async (index: number) => {
+    const urlToRemove = imageUrls[index]
+
+    try {
+      // 从URL中提取文件路径并删除
+      const urlParts = urlToRemove.split(`minecraft-forum/`)
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1]
+        const { error } = await supabase.storage.from("minecraft-forum").remove([filePath])
+        if (error) {
+          console.error("删除文件失败:", error)
+        }
+      }
+    } catch (error) {
+      console.error("删除文件时出错:", error)
+    }
+
+    const updatedUrls = imageUrls.filter((_, i) => i !== index)
+    setImageUrls(updatedUrls)
+    onImagesUploaded(updatedUrls)
+  }
+
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    const updatedUrls = [...imageUrls]
+    const [movedItem] = updatedUrls.splice(fromIndex, 1)
+    updatedUrls.splice(toIndex, 0, movedItem)
+    setImageUrls(updatedUrls)
+    onImagesUploaded(updatedUrls)
+  }
 
   return (
     <div className="space-y-4">
-      <Label className="text-lg font-bold flex items-center gap-2 text-black dark:text-white">
-        <div className="w-2 h-2 bg-black dark:bg-white"></div>
-        封面图片 ({imageUrls.length}/{maxImages})
+      <Label className="text-lg font-bold flex items-center gap-2">
+        <div className="w-2 h-2 bg-black"></div>
+        图片上传 ({imageUrls.length}/{maxImages})
       </Label>
 
-      {/* 上传按钮 */}
-      <div className="flex items-center gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={uploading || imageUrls.length >= maxImages}
-          className="border-2 border-black dark:border-white bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black font-bold"
-          onClick={() => document.getElementById("image-upload")?.click()}
-        >
-          {uploading ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin"></div>
-              上传中...
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              选择图片
-            </div>
-          )}
-        </Button>
+      {/* 图片预览网格 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <AnimatePresence>
+          {imageUrls.map((url, index) => (
+            <motion.div
+              key={url}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="relative group"
+            >
+              <div className="relative aspect-square overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white">
+                <Image src={url || "/placeholder.svg"} alt={`图片 ${index + 1}`} fill className="object-cover" />
+                {index === 0 && (
+                  <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-xs font-bold">封面</div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                  {index > 0 && (
+                    <Button size="sm" variant="secondary" onClick={() => moveImage(index, 0)} className="text-xs">
+                      设为封面
+                    </Button>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute right-2 top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  onClick={() => handleRemoveImage(index)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
-        <input
-          id="image-upload"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={uploadImages}
-          disabled={uploading || imageUrls.length >= maxImages}
-          className="hidden"
-        />
-
-        <span className="text-sm text-gray-600 dark:text-gray-400">支持 JPG、PNG、GIF 格式</span>
+        {/* 上传按钮 */}
+        {imageUrls.length < maxImages && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="relative">
+            <div className="aspect-square border-2 border-dashed border-black bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer group">
+              {isUploading ? (
+                <div className="flex flex-col items-center justify-center p-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-black mb-2" />
+                  <span className="text-sm text-black font-bold mb-2">上传中... {Math.round(uploadProgress)}%</span>
+                  <Progress value={uploadProgress} className="w-full" />
+                </div>
+              ) : (
+                <Label
+                  htmlFor="images"
+                  className="flex flex-col items-center justify-center cursor-pointer w-full h-full"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 border-2 border-black flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors duration-200">
+                      <Plus className="h-6 w-6" />
+                    </div>
+                    <span className="text-sm font-bold text-center">添加图片</span>
+                    <span className="text-xs text-gray-600 text-center">最大5MB</span>
+                  </div>
+                </Label>
+              )}
+            </div>
+            <Input
+              id="images"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={isUploading}
+            />
+          </motion.div>
+        )}
       </div>
 
-      {/* 图片预览 */}
       {imageUrls.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {imageUrls.map((url, index) => (
-            <div key={index} className="relative group">
-              <div className="aspect-square border-2 border-black dark:border-white bg-white dark:bg-black overflow-hidden">
-                <Image
-                  src={url || "/placeholder.svg"}
-                  alt={`上传的图片 ${index + 1}`}
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = "none"
-                    target.nextElementSibling?.classList.remove("hidden")
-                  }}
-                />
-                <div className="hidden w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-                  <ImageIcon className="h-8 w-8 text-gray-400" />
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="absolute -top-2 -right-2 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white"
-                onClick={() => removeImage(index)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {imageUrls.length === 0 && (
-        <div className="border-2 border-dashed border-black dark:border-white p-8 text-center bg-white dark:bg-black">
-          <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">还没有上传图片</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">点击上方按钮选择图片</p>
+        <div className="text-sm text-gray-600 bg-gray-50 border-2 border-black p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <ImageIcon className="h-4 w-4" />
+            <span className="font-bold">图片说明：</span>
+          </div>
+          <ul className="list-disc list-inside space-y-1 text-xs">
+            <li>第一张图片将作为帖子封面显示</li>
+            <li>点击"设为封面"可以更改封面图片</li>
+            <li>在帖子详情页可以查看所有图片</li>
+          </ul>
         </div>
       )}
     </div>
