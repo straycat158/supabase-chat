@@ -135,10 +135,14 @@ export function ResourcesPageContent({ session, categories, resources }: Resourc
                   {resource.cover_images && resource.cover_images.length > 0 && (
                     <div className="relative aspect-video w-full overflow-hidden border-2 border-black dark:border-white">
                       <Image
-                        src={resource.cover_images[0] || "/placeholder.svg"}
+                        src={resource.cover_images[0] || "/placeholder.svg?height=200&width=300"}
                         alt={resource.title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = "/placeholder.svg?height=200&width=300"
+                        }}
                       />
                       {resource.cover_images.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black dark:bg-white text-white dark:text-black px-2 py-1 text-xs font-bold">

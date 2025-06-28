@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth-provider"
-import { MultiImageUpload } from "@/components/multi-image-upload"
 import { motion } from "framer-motion"
 import {
   Upload,
@@ -23,12 +22,15 @@ import {
   Lightbulb,
   Map,
   MoreHorizontal,
-  AlertCircle,
-  Database,
+  ImageIcon,
+  Plus,
+  X,
+  ExternalLink,
 } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ResourceCategory } from "@/lib/types/database"
+import Image from "next/image"
 
 const categoryIcons = {
   mods: Package,
@@ -38,8 +40,29 @@ const categoryIcons = {
   others: MoreHorizontal,
 }
 
-// 默认使用新的存储桶名称，你可以根据需要修改
-const STORAGE_BUCKET_NAME = "minecraft-resources-images"
+// 推荐的图床服务
+const recommendedImageHosts = [
+  {
+    name: "picui",
+    url: "https://picui.cn/",
+    description: "免费图床，支持直链，无需注册",
+  },
+  {
+    name: "SM.MS",
+    url: "https://sm.ms/",
+    description: "免费图床，简单易用，支持API",
+  },
+  {
+    name: "Imgur",
+    url: "https://imgur.com/",
+    description: "老牌图床，稳定可靠",
+  },
+  {
+    name: "PostImage",
+    url: "https://postimages.org/",
+    description: "免费图床，无需注册",
+  },
+]
 
 export default function ResourceUploadPage() {
   const router = useRouter()
@@ -53,8 +76,7 @@ export default function ResourceUploadPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [coverImages, setCoverImages] = useState<string[]>([])
-  const [storageReady, setStorageReady] = useState(false)
-  const [checkingStorage, setCheckingStorage] = useState(true)
+  const [newImageUrl, setNewImageUrl] = useState("")
 
   const [formData, setFormData] = useState({
     title: "",
@@ -177,34 +199,6 @@ export default function ResourceUploadPage() {
     }
   }, [user, isAuthLoading, router, toast])
 
-  // 检查存储桶状态
-  useEffect(() => {
-    const checkStorage = async () => {
-      setCheckingStorage(true)
-      try {
-        // 尝试列出存储桶中的文件来检查存储桶是否存在
-        const { data, error } = await supabase.storage.from(STORAGE_BUCKET_NAME).list("", {
-          limit: 1,
-        })
-
-        if (error) {
-          console.error(`存储桶 ${STORAGE_BUCKET_NAME} 不存在或无法访问:`, error)
-          setStorageReady(false)
-        } else {
-          console.log(`存储桶 ${STORAGE_BUCKET_NAME} 可用`)
-          setStorageReady(true)
-        }
-      } catch (error: any) {
-        console.error("检查存储桶失败:", error)
-        setStorageReady(false)
-      } finally {
-        setCheckingStorage(false)
-      }
-    }
-
-    checkStorage()
-  }, [supabase])
-
   // 获取资源分类
   useEffect(() => {
     const fetchCategories = async () => {
@@ -259,6 +253,77 @@ export default function ResourceUploadPage() {
     }))
   }
 
+  // 验证图片URL
+  const validateImageUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url)
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:"
+    } catch {
+      return false
+    }
+  }
+
+  // 添加图片URL
+  const handleAddImageUrl = () => {
+    if (!newImageUrl.trim()) {
+      toast({
+        title: "请输入图片链接",
+        description: "图片链接不能为空",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!validateImageUrl(newImageUrl)) {
+      toast({
+        title: "无效的图片链接",
+        description: "请输入有效的HTTP或HTTPS图片链接",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (coverImages.length >= 5) {
+      toast({
+        title: "图片数量超限",
+        description: "最多只能添加5张封面图片",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (coverImages.includes(newImageUrl)) {
+      toast({
+        title: "图片已存在",
+        description: "该图片链接已经添加过了",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCoverImages((prev) => [...prev, newImageUrl])
+    setNewImageUrl("")
+    toast({
+      title: "添加成功",
+      description: "图片链接已添加",
+    })
+  }
+
+  // 删除图片URL
+  const handleRemoveImageUrl = (index: number) => {
+    setCoverImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // 移动图片位置
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    setCoverImages((prev) => {
+      const newImages = [...prev]
+      const [movedItem] = newImages.splice(fromIndex, 1)
+      newImages.splice(toIndex, 0, movedItem)
+      return newImages
+    })
+  }
+
   // 提交表单
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -277,15 +342,6 @@ export default function ResourceUploadPage() {
       toast({
         title: "请选择分类",
         description: "请选择资源分类",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!storageReady) {
-      toast({
-        title: "存储不可用",
-        description: "图片存储不可用，请检查存储桶配置",
         variant: "destructive",
       })
       return
@@ -331,33 +387,6 @@ export default function ResourceUploadPage() {
       })
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  // 创建存储桶
-  const createStorageBucket = async () => {
-    try {
-      const response = await fetch("/api/storage/create-new", {
-        method: "POST",
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        toast({
-          title: "存储桶创建成功",
-          description: `新存储桶 ${data.bucketName} 已创建`,
-        })
-        // 重新检查存储状态
-        window.location.reload()
-      } else {
-        throw new Error(data.error)
-      }
-    } catch (error: any) {
-      toast({
-        title: "创建存储桶失败",
-        description: error.message,
-        variant: "destructive",
-      })
     }
   }
 
@@ -440,57 +469,39 @@ export default function ResourceUploadPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          {/* 存储状态检查 */}
-          {checkingStorage && (
-            <Card className="bw-card bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 mb-6">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent animate-spin"></div>
-                  <span className="text-blue-800 dark:text-blue-200 font-bold">检查存储桶状态...</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 存储不可用警告 */}
-          {!checkingStorage && !storageReady && (
-            <Card className="bw-card bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 mb-6">
-              <CardHeader>
-                <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  存储桶不可用
-                </CardTitle>
-                <CardDescription className="text-red-700 dark:text-red-300">
-                  存储桶 <code className="bg-red-100 dark:bg-red-900 px-2 py-1 rounded">{STORAGE_BUCKET_NAME}</code>{" "}
-                  不存在或无法访问
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-red-700 dark:text-red-300">
-                    <p className="font-bold mb-2">解决方案:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>点击下方按钮创建新的存储桶</li>
-                      <li>
-                        或者访问{" "}
-                        <Link href="/admin/storage/new" className="underline font-bold">
-                          存储管理页面
-                        </Link>
-                      </li>
-                      <li>或者联系管理员配置存储桶</li>
-                    </ol>
-                  </div>
-                  <Button
-                    onClick={createStorageBucket}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold"
+          {/* 推荐图床服务 */}
+          <Card className="bw-card bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 mb-6">
+            <CardHeader>
+              <CardTitle className="text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                推荐图床服务
+              </CardTitle>
+              <CardDescription className="text-blue-700 dark:text-blue-300">
+                使用以下免费图床服务上传你的资源封面图片，然后复制图片链接到下方
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recommendedImageHosts.map((host) => (
+                  <div
+                    key={host.name}
+                    className="p-4 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-700 rounded"
                   >
-                    <Database className="h-4 w-4 mr-2" />
-                    创建新存储桶
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-blue-800 dark:text-blue-200">{host.name}</h4>
+                      <Button asChild size="sm" variant="outline" className="text-xs bg-transparent">
+                        <a href={host.url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          访问
+                        </a>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">{host.description}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="bw-card bg-white dark:bg-black">
             <CardHeader>
@@ -541,15 +552,96 @@ export default function ResourceUploadPage() {
                   />
                 </div>
 
-                {/* 封面图片 */}
-                <div className="space-y-2">
-                  <MultiImageUpload
-                    onImagesUploaded={setCoverImages}
-                    existingImageUrls={coverImages}
-                    folderPath="resource-covers"
-                    maxImages={5}
-                    bucketName={STORAGE_BUCKET_NAME}
-                  />
+                {/* 封面图片链接 */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-bold flex items-center gap-2 text-black dark:text-white">
+                    <div className="w-2 h-2 bg-black dark:bg-white"></div>
+                    封面图片 ({coverImages.length}/5)
+                  </Label>
+
+                  {/* 添加图片链接 */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <Input
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        placeholder="粘贴图片链接 (https://...)"
+                        className="pl-10 border-2 border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      disabled={coverImages.length >= 5}
+                      className="bw-button font-bold"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加
+                    </Button>
+                  </div>
+
+                  {/* 图片预览 */}
+                  {coverImages.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {coverImages.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <div className="relative aspect-square overflow-hidden border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white dark:bg-black">
+                            <Image
+                              src={url || "/placeholder.svg"}
+                              alt={`封面图片 ${index + 1}`}
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.src = "/placeholder.svg?height=200&width=200"
+                              }}
+                            />
+                            {index === 0 && (
+                              <div className="absolute top-2 left-2 bg-black dark:bg-white text-white dark:text-black px-2 py-1 text-xs font-bold">
+                                封面
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                              {index > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => moveImage(index, 0)}
+                                  className="text-xs"
+                                  type="button"
+                                >
+                                  设为封面
+                                </Button>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute right-2 top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              onClick={() => handleRemoveImageUrl(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <ImageIcon className="h-4 w-4" />
+                      <span className="font-bold">图片说明：</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>第一张图片将作为资源封面显示</li>
+                      <li>点击"设为封面"可以更改封面图片</li>
+                      <li>建议使用高质量的图片，尺寸比例为16:9或1:1</li>
+                      <li>请使用稳定的图床服务，避免图片失效</li>
+                    </ul>
+                  </div>
                 </div>
 
                 {/* 资源描述 */}
@@ -601,20 +693,11 @@ export default function ResourceUploadPage() {
 
                 {/* 提交按钮 */}
                 <div className="pt-6 border-t-2 border-black dark:border-white">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting || !storageReady}
-                    className="w-full bw-button font-bold text-lg py-6"
-                  >
+                  <Button type="submit" disabled={isSubmitting} className="w-full bw-button font-bold text-lg py-6">
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin"></div>
                         发布中...
-                      </div>
-                    ) : !storageReady ? (
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5" />
-                        存储不可用
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
